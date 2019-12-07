@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.sciencesakura'
 archivesBaseName = 'dbsetup-spreadsheet'
-version = '0.0.1-SHAPSHOT'
+version = '0.0.1'
 description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
