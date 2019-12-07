@@ -1,0 +1,120 @@
+plugins {
+  id 'java'
+  id 'maven-publish'
+  id 'signing'
+}
+
+group = 'com.sciencesakura'
+archivesBaseName = 'dbsetup-spreadsheet'
+version = '0.0.1-SHAPSHOT'
+description = 'An extension of DbSetup to import data from Microsoft Excel files.'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation 'com.ninja-squad:DbSetup:2.1.0'
+  implementation 'org.apache.poi:poi:4.1.1'
+  compileOnly 'org.jetbrains:annotations:17.0.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+  testImplementation 'org.assertj:assertj-db:1.2.0'
+  testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.1'
+  testRuntimeOnly 'com.h2database:h2:1.4.200'
+}
+
+tasks.withType(JavaCompile) {
+  options.encoding = 'utf-8'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+javadoc {
+  destinationDir = new File(projectDir, 'docs')
+  options.encoding = 'utf-8'
+  options.locale = 'en'
+  options.noTimestamp = true
+  options.links(
+    'https://docs.oracle.com/javase/8/docs/api/',
+    'http://dbsetup.ninja-squad.com/apidoc/2.1.0/',
+    'https://javadoc.io/doc/org.jetbrains/annotations/17.0.0/'
+  )
+}
+
+tasks.withType(Jar) {
+  manifest {
+    attributes(
+      'Implementation-Title': project.name,
+      'Implementation-Vendor': project.group.split('\\.').reverse().join('.'),
+      'Implementation-Version': project.version
+    )
+  }
+  metaInf {
+    from new File(projectDir, 'LICENSE')
+  }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  archiveClassifier.set('javadoc')
+  from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+      pom {
+        name = project.name
+        description = project.description
+        url = 'https://github.com/sciencesakura/dbsetup-spreadsheet'
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://opensource.org/licenses/MIT'
+          }
+        }
+        developers {
+          developer {
+            name = 'sciencesakura'
+            email = 'sakurasakurascience@gmail.com'
+          }
+        }
+        scm {
+          connection = 'scm:git:git://github.com/sciencesakura/dbsetup-spreadsheet.git'
+          developerConnection = 'scm:git:git://github.com/sciencesakura/dbsetup-spreadsheet.git'
+          url = 'https://github.com/sciencesakura/dbsetup-spreadsheet'
+        }
+      }
+    }
+  }
+  repositories {
+    maven {
+      url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+      credentials {
+        username project.ossrhUsername
+        password project.ossrhPassword
+      }
+    }
+  }
+}
+
+signing {
+  sign publishing.publications.maven
+}
+
+clean {
+  delete << javadoc.destinationDir
+}
