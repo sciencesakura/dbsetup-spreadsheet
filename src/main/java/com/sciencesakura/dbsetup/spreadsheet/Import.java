@@ -76,6 +76,7 @@ public class Import implements Operation {
      * @param location a location of source file that is the relative path from classpath root
      * @return a new builder
      */
+    @NotNull
     public static Builder excel(@NotNull String location) {
         return new Builder(location);
     }
@@ -146,6 +147,8 @@ public class Import implements Operation {
 
         private int top = 0;
 
+        private boolean built;
+
         private Builder(String location) {
             this.location = getClass().getClassLoader().getResource(location);
             if (this.location == null)
@@ -157,7 +160,10 @@ public class Import implements Operation {
          *
          * @return a new {@link Import} instance
          */
+        @NotNull
         public Import build() {
+            requireNotBuilt();
+            built = true;
             return new Import(this);
         }
 
@@ -170,7 +176,9 @@ public class Import implements Operation {
          * @param left a 0-based column index, must be non-negative
          * @return the reference to this object
          */
+        @NotNull
         public Builder left(int left) {
+            requireNotBuilt();
             if (left < 0) throw new IllegalArgumentException("left must be greater than or equal to 0");
             this.left = left;
             return this;
@@ -185,10 +193,16 @@ public class Import implements Operation {
          * @param top a 0-based row index, must be non-negative
          * @return the reference to this object
          */
+        @NotNull
         public Builder top(int top) {
+            requireNotBuilt();
             if (top < 0) throw new IllegalArgumentException("top must be greater than or equal to 0");
             this.top = top;
             return this;
+        }
+
+        private void requireNotBuilt() {
+            if (built) throw new IllegalStateException("this operation has been built already");
         }
     }
 }

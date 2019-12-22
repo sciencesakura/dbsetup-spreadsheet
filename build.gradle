@@ -16,7 +16,7 @@ repositories {
 dependencies {
   implementation 'com.ninja-squad:DbSetup:2.1.0'
   implementation 'org.apache.poi:poi:4.1.1'
-  compileOnly 'org.jetbrains:annotations:17.0.0'
+  compileOnly 'org.jetbrains:annotations:18.0.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
@@ -48,7 +48,7 @@ javadoc {
   options.links(
     'https://docs.oracle.com/en/java/javase/13/docs/api/',
     'http://dbsetup.ninja-squad.com/apidoc/2.1.0/',
-    'https://javadoc.io/doc/org.jetbrains/annotations/17.0.0/'
+    'https://javadoc.io/doc/org.jetbrains/annotations/18.0.0/'
   )
 }
 
