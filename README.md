@@ -37,7 +37,7 @@ Maven:
 ## Usage
 
 ```java
-import static com.sciencesakura.dbsetup.spreadsheet.Import.spreadsheet;
+import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 
 // `testdata.xlsx` must be in classpath.
 Operation operation = excel("testdata.xlsx").build();
