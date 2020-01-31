@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.ninja-squad:DbSetup:2.1.0'
+  api 'com.ninja-squad:DbSetup:2.1.0'
   implementation 'org.apache.poi:poi:4.1.1'
   compileOnly 'org.jetbrains:annotations:18.0.0'
 
