@@ -13,7 +13,7 @@ A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Micro
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.1'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.2'
 testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.1' // if import *.xlsx
 ```
 
@@ -23,7 +23,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <scope>test</scope>
 </dependency>
 <dependency><!-- if import *.xlsx -->
