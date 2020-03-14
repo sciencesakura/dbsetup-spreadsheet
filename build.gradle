@@ -2,11 +2,12 @@ plugins {
   id 'java-library'
   id 'maven-publish'
   id 'signing'
+  id 'com.github.spotbugs' version '4.0.2'
 }
 
 group = 'com.sciencesakura'
 archivesBaseName = 'dbsetup-spreadsheet'
-version = '0.0.2'
+version = '0.0.3-SNAPSHOT'
 description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 
 repositories {
@@ -41,7 +42,7 @@ test {
 }
 
 javadoc {
-  destinationDir = new File(projectDir, 'docs')
+  destinationDir = file("$projectDir/docs")
   options.encoding = 'utf-8'
   options.locale = 'en_US'
   options.noTimestamp = true
@@ -61,7 +62,7 @@ tasks.withType(Jar) {
     )
   }
   metaInf {
-    from new File(projectDir, 'LICENSE')
+    from file("$projectDir/LICENSE")
   }
 }
 
