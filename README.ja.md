@@ -4,6 +4,8 @@
 
 Microsoft Excelファイルからデータ取り込みができる[DbSetup](http://dbsetup.ninja-squad.com/)拡張機能です.
 
+![](https://github.com/sciencesakura/dbsetup-spreadsheet/workflows/build/badge.svg)
+
 ## Requirement
 
 * Java 8以降
