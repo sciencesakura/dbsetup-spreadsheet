@@ -49,21 +49,8 @@ import static com.sciencesakura.dbsetup.spreadsheet.Cells.valueForHeader;
 
 /**
  * An Operation which imports a Microsoft Excel file into the tables.
- * <p>
- * The worksheets must be named exactly the same as the destination tables.
- * </p>
- * <p>
- * Usage:
- * </p>
- * <pre><code>
- * // `testdata.xlsx` must be in classpath.
- * Operation operation = excel("testdata.xlsx").build();
- * DbSetup dbSetup = new DbSetup(destination, operation);
- * dbSetup.launch();
- * </code></pre>
- * <p>
- * This operation just uses the {@link Insert} operations internal, does not 'upsert'.
- * </p>
+ *
+ * @author sciencesakura
  */
 public class Import implements Operation {
 
@@ -74,7 +61,7 @@ public class Import implements Operation {
      * </p>
      *
      * @param location a location of source file that is the relative path from classpath root
-     * @return a new builder
+     * @return a new Import.Builder
      */
     @NotNull
     public static Builder excel(@NotNull String location) {
@@ -138,6 +125,8 @@ public class Import implements Operation {
 
     /**
      * A builder to create a {@link Import} instance.
+     *
+     * @author sciencesakura
      */
     public static class Builder {
 
