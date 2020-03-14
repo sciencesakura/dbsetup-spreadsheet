@@ -4,6 +4,8 @@
 
 A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Microsoft Excel files.
 
+![](https://github.com/sciencesakura/dbsetup-spreadsheet/workflows/build/badge.svg)
+
 ## Requirement
 
 * Java 8 or later
