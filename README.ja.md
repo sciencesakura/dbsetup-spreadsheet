@@ -16,7 +16,7 @@ Gradle:
 
 ```groovy
 testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.2'
-testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.1' // *.xlsxをインポートする場合
+testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2' // *.xlsxをインポートする場合
 ```
 
 Maven:
@@ -31,17 +31,56 @@ Maven:
 <dependency><!-- *.xlsxをインポートする場合 -->
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>4.1.1</version>
+  <version>4.1.2</version>
   <scope>test</scope>
 </dependency>
 ```
 
 ## Usage
 
+次のテーブルがある場合:
+
+```sql
+create table country (
+  id    integer       not null,
+  code  char(3)       not null,
+  name  varchar(256)  not null,
+  primary key (id),
+  unique (code)
+);
+
+create table customer (
+  id      integer       not null,
+  name    varchar(256)  not null,
+  country integer       not null,
+  primary key (id),
+  foreign key (country) references country (id)
+);
+```
+
+テーブル毎に1枚のワークシートを含むExcelファイルを作成し, それらのワークシートにテーブルと同じ名前を付けます. テーブル間に依存関係がある場合は被依存テーブルのワークシートが先になるようにします.
+
+`country` シート:
+
+|id|code|name|
+|--|----|----|
+| 1|GBR |United Kingdom|
+| 2|HKG |Hong Kong|
+| 3|JPN |Japan|
+
+`customer` シート:
+
+|id|name|country|
+|--|----|-------|
+| 1|Eriol|1|
+| 2|Sakura|3|
+| 3|Xiaolang|2|
+
+準備したExcelファイルをクラスパス上に置き, 次のようなコードを書きます:
+
 ```java
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 
-// `testdata.xlsx` はクラスパス上にある必要があります
 Operation operation = excel("testdata.xlsx").build();
 DbSetup dbSetup = new DbSetup(destination, operation);
 dbSetup.launch();
@@ -51,7 +90,7 @@ dbSetup.launch();
 
 ## Recommendation
 
-この拡張機能を利用するのは, 取り込み先テーブルの列数が多すぎて[Insert.Builder](http://dbsetup.ninja-squad.com/apidoc/2.1.0/com/ninja_squad/dbsetup/operation/Insert.Builder.html)を使用したコードの可読性が悪くなってしまう場合にのみにすることをお薦めします.
+この拡張機能を利用するのは取り込み先テーブルの列数が多すぎて[Insert.Builder](http://dbsetup.ninja-squad.com/apidoc/2.1.0/com/ninja_squad/dbsetup/operation/Insert.Builder.html)を使用したコードの可読性が悪くなってしまう場合のみにすることをお薦めします.
 
 ## Prefer CSV ?
 
