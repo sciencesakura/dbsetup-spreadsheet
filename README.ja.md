@@ -15,7 +15,7 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.2'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.3'
 testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2' // *.xlsxをインポートする場合
 ```
 
@@ -25,7 +25,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3</version>
   <scope>test</scope>
 </dependency>
 <dependency><!-- *.xlsxをインポートする場合 -->
