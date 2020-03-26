@@ -38,10 +38,49 @@ Maven:
 
 ## Usage
 
+When there are tables below:
+
+```sql
+create table country (
+  id    integer       not null,
+  code  char(3)       not null,
+  name  varchar(256)  not null,
+  primary key (id),
+  unique (code)
+);
+
+create table customer (
+  id      integer       not null,
+  name    varchar(256)  not null,
+  country integer       not null,
+  primary key (id),
+  foreign key (country) references country (id)
+);
+```
+
+Create An Excel file with one worksheet per table, and name those worksheets the same name as the tables. If there is a dependency between the tables, put the worksheet of dependent table early.
+
+`country` sheet:
+
+|id|code|name|
+|--|----|----|
+| 1|GBR |United Kingdom|
+| 2|HKG |Hong Kong|
+| 3|JPN |Japan|
+
+`customer` sheet:
+
+|id|name|country|
+|--|----|-------|
+| 1|Eriol|1|
+| 2|Sakura|3|
+| 3|Xiaolang|2|
+
+Put the prepared Excel file on the classpath, and write code like below:
+
 ```java
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 
-// `testdata.xlsx` must be in classpath.
 Operation operation = excel("testdata.xlsx").build();
 DbSetup dbSetup = new DbSetup(destination, operation);
 dbSetup.launch();
