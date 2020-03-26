@@ -16,7 +16,7 @@ Gradle:
 
 ```groovy
 testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.2'
-testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.1' // if import *.xlsx
+testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2' // if import *.xlsx
 ```
 
 Maven:
@@ -31,7 +31,7 @@ Maven:
 <dependency><!-- if import *.xlsx -->
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>4.1.1</version>
+  <version>4.1.2</version>
   <scope>test</scope>
 </dependency>
 ```

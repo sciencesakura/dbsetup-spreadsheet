@@ -16,7 +16,7 @@ Gradle:
 
 ```groovy
 testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.2'
-testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.1' // *.xlsxをインポートする場合
+testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2' // *.xlsxをインポートする場合
 ```
 
 Maven:
@@ -31,7 +31,7 @@ Maven:
 <dependency><!-- *.xlsxをインポートする場合 -->
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>4.1.1</version>
+  <version>4.1.2</version>
   <scope>test</scope>
 </dependency>
 ```
