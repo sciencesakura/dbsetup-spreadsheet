@@ -5,11 +5,6 @@ plugins {
   id 'com.github.spotbugs' version '4.0.2'
 }
 
-group = 'com.sciencesakura'
-archivesBaseName = 'dbsetup-spreadsheet'
-version = '0.0.3'
-description = 'An extension of DbSetup to import data from Microsoft Excel files.'
-
 repositories {
   jcenter()
 }
