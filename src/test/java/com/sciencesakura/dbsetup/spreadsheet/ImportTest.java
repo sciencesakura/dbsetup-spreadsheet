@@ -31,6 +31,7 @@ import org.assertj.db.type.Table;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
@@ -182,9 +183,58 @@ class ImportTest {
                 .hasMessage("header not found: empty_sheet");
     }
 
-    @Test
-    void file_not_found() {
-        assertThatThrownBy(() -> excel("xxx"))
-                .hasMessage("xxx not found");
+    @Nested
+    class IllegalArgument {
+
+        @Test
+        void file_not_found() {
+            assertThatThrownBy(() -> excel("xxx"))
+                    .hasMessage("xxx not found");
+        }
+
+        @Test
+        void left_is_negative() {
+            int left = -1;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").left(left))
+                    .hasMessage("left must be greater than or equal to 0");
+        }
+
+        @Test
+        void top_is_negative() {
+            int top = -1;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").top(top))
+                    .hasMessage("top must be greater than or equal to 0");
+        }
+    }
+
+    @Nested
+    class IllegalState {
+
+        @Test
+        void build_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(ib::build)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void left_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.left(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void top_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.top(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
     }
 }
