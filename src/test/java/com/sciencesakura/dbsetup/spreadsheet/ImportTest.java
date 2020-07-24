@@ -24,21 +24,20 @@
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import com.ninja_squad.dbsetup.DbSetup;
+import com.ninja_squad.dbsetup.destination.DataSourceDestination;
 import com.ninja_squad.dbsetup.destination.Destination;
-import com.ninja_squad.dbsetup.destination.DriverManagerDestination;
 import com.ninja_squad.dbsetup.operation.Operation;
-import org.assertj.db.type.DateTimeValue;
-import org.assertj.db.type.DateValue;
-import org.assertj.db.type.Source;
 import org.assertj.db.type.Table;
-import org.assertj.db.type.TimeValue;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javax.sql.DataSource;
 
+import static com.ninja_squad.dbsetup.Operations.sequenceOf;
+import static com.ninja_squad.dbsetup.Operations.truncate;
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.db.api.Assertions.assertThat;
@@ -46,111 +45,196 @@ import static org.assertj.db.type.Table.Order.asc;
 
 class ImportTest {
 
+    private static final Table.Order[] ORDER_BY_A = {asc("a")};
+
+    private static DataSource dataSource;
+
     private static Destination destination;
 
-    private static Source source;
-
     @BeforeAll
-    static void setUpClass() throws SQLException {
+    static void setUpClass() {
         String url = "jdbc:h2:mem:ImportTest;DB_CLOSE_DELAY=-1";
-        destination = DriverManagerDestination.with(url, "sa", "");
-        source = new Source(url, "sa", "");
-        try (Connection conn = destination.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.addBatch("create table data_types (a int, b decimal(7, 3), c date, d timestamp, e varchar(6), f boolean)");
-            stmt.addBatch("create table multi_tables_1 (a int, b int)");
-            stmt.addBatch("create table multi_tables_2 (x int, y int)");
-            stmt.addBatch("create table margin_1 (a int, b int)");
-            stmt.addBatch("create table margin_2 (x int, y int)");
-            stmt.addBatch("create table error_value (a int)");
-            stmt.executeBatch();
-        }
+        FluentConfiguration conf = Flyway.configure().dataSource(url, "sa", null);
+        conf.load().migrate();
+        dataSource = conf.getDataSource();
+        destination = DataSourceDestination.with(dataSource);
     }
 
     @Test
-    void data_types() {
-        Operation operation = excel("data/data_types.xlsx").build();
+    void single_sheet() {
+        Operation operation = sequenceOf(
+                truncate("table_1"),
+                excel("data/single_sheet.xlsx").build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(source, "data_types", new Table.Order[] {asc("a")}))
-                // 1
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
                 .row()
                 .column("a").value().isEqualTo(100)
-                .column("b").value().isEqualTo(0.5)
-                .column("c").value().isEqualTo(DateValue.of(2019, 12, 1))
-                .column("d").value().isEqualTo(datetime(2019, 12, 1, 9, 30, 1))
-                .column("e").value().isEqualTo("hoge")
-                .column("f").value().isTrue()
-                // 2
+                .column("b").value().isEqualTo(10000000000L)
+                .column("c").value().isEqualTo(0.5)
+                .column("d").value().isEqualTo("2019-12-01")
+                .column("e").value().isEqualTo("2019-12-01T09:30:01.001000000")
+                .column("f").value().isEqualTo("AAA")
+                .column("g").value().isEqualTo("甲")
+                .column("h").value().isTrue()
+                .column("i").value().isNotNull()
                 .row()
                 .column("a").value().isEqualTo(200)
-                .column("b").value().isEqualTo(0.25)
-                .column("c").value().isEqualTo(DateValue.of(2019, 12, 2))
-                .column("d").value().isEqualTo(datetime(2019, 12, 2, 9, 30, 2))
-                .column("e").value().isNull()
-                .column("f").value().isFalse()
-                // 2
-                .row()
-                .column("a").value().isEqualTo(300)
-                .column("b").value().isEqualTo(0.75)
-                .column("c").value().isEqualTo(DateValue.of(2019, 12, 3))
-                .column("d").value().isEqualTo(datetime(2019, 12, 3, 9, 30, 2))
-                .column("e").value().isEqualTo("HOGE")
-                .column("f").value().isTrue();
+                .column("b").value().isEqualTo(20000000000L)
+                .column("c").value().isEqualTo(0.25)
+                .column("d").value().isEqualTo("2019-12-02")
+                .column("e").value().isEqualTo("2019-12-02T09:30:02.002000000")
+                .column("f").value().isEqualTo("BBB")
+                .column("g").value().isEqualTo("乙")
+                .column("h").value().isFalse()
+                .column("i").value().isNull();
     }
 
     @Test
-    void multi_tables() {
-        Operation operation = excel("data/multi_tables.xlsx").build();
+    void multiple_sheet() {
+        Operation operation = sequenceOf(
+                truncate("table_1", "table_2"),
+                excel("data/multiple_sheet.xlsx").build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(source, "multi_tables_1"))
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
                 .row()
-                .column("a").value().isEqualTo(1)
-                .column("b").value().isEqualTo(2);
-        assertThat(new Table(source, "multi_tables_2"))
+                .column("a").value().isEqualTo(100)
+                .column("b").value().isEqualTo(10000000000L)
+                .column("c").value().isEqualTo(0.5)
+                .column("d").value().isEqualTo("2019-12-01")
+                .column("e").value().isEqualTo("2019-12-01T09:30:01.001000000")
+                .column("f").value().isEqualTo("AAA")
+                .column("g").value().isEqualTo("甲")
+                .column("h").value().isTrue()
+                .column("i").value().isNotNull()
                 .row()
-                .column("x").value().isEqualTo(-1)
-                .column("y").value().isEqualTo(-2);
+                .column("a").value().isEqualTo(200)
+                .column("b").value().isEqualTo(20000000000L)
+                .column("c").value().isEqualTo(0.25)
+                .column("d").value().isEqualTo("2019-12-02")
+                .column("e").value().isEqualTo("2019-12-02T09:30:02.002000000")
+                .column("f").value().isEqualTo("BBB")
+                .column("g").value().isEqualTo("乙")
+                .column("h").value().isFalse()
+                .column("i").value().isNull();
+        assertThat(new Table(dataSource, "table_2", ORDER_BY_A))
+                .row()
+                .column("a").value().isEqualTo(101)
+                .column("b").value().isEqualTo("AAA")
+                .row()
+                .column("a").value().isEqualTo(201)
+                .column("b").value().isEqualTo("BBB")
+                .row()
+                .column("a").value().isEqualTo(301)
+                .column("b").value().isEqualTo("CCC");
     }
 
     @Test
-    void margin() {
-        Operation operation = excel("data/margin.xlsx").top(2).left(1).build();
+    void has_margin() {
+        Operation operation = sequenceOf(
+                truncate("table_2"),
+                excel("data/has_margin.xlsx")
+                        .top(2)
+                        .left(1)
+                        .build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(source, "margin_1"))
+        assertThat(new Table(dataSource, "table_2", ORDER_BY_A))
                 .row()
-                .column("a").value().isEqualTo(1)
-                .column("b").value().isEqualTo(2);
-        assertThat(new Table(source, "margin_2"))
+                .column("a").value().isEqualTo(101)
+                .column("b").value().isEqualTo("AAA")
                 .row()
-                .column("x").value().isEqualTo(-1)
-                .column("y").value().isEqualTo(-2);
+                .column("a").value().isEqualTo(201)
+                .column("b").value().isEqualTo("BBB")
+                .row()
+                .column("a").value().isEqualTo(301)
+                .column("b").value().isEqualTo("CCC");
     }
 
     @Test
-    void error_value() {
-        Import.Builder ib = excel("data/error_value.xlsx");
+    void contains_formula() {
+        Operation operation = sequenceOf(
+                truncate("table_1"),
+                excel("data/contains_formula.xlsx").build());
+        DbSetup dbSetup = new DbSetup(destination, operation);
+        dbSetup.launch();
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
+                .row()
+                .column("a").value().isEqualTo(10)
+                .column("b").value().isEqualTo(21)
+                .column("c").value().isEqualTo(10.5)
+                .column("d").value().isEqualTo("2019-10-21")
+                .column("f").value().isEqualTo("abc")
+                .column("h").value().isFalse();
+    }
+
+    @Test
+    void contains_error() {
+        Import.Builder ib = excel("data/contains_error.xlsx");
         assertThatThrownBy(ib::build)
-                .hasMessage("error value contained: error_value!A4");
+                .hasMessage("error value contained: table_2!B4");
     }
 
     @Test
-    void empty_sheet() {
-        Import.Builder ib = excel("data/empty_sheet.xlsx");
+    void contains_empty_sheet() {
+        Import.Builder ib = excel("data/contains_empty_sheet.xlsx");
         assertThatThrownBy(ib::build)
                 .hasMessage("header not found: empty_sheet");
     }
 
-    @Test
-    void file_not_found() {
-        assertThatThrownBy(() -> excel("data/file_not_found.xlsx"))
-                .hasMessage("data/file_not_found.xlsx not found");
+    @Nested
+    class IllegalArgument {
+
+        @Test
+        void file_not_found() {
+            assertThatThrownBy(() -> excel("xxx"))
+                    .hasMessage("xxx not found");
+        }
+
+        @Test
+        void left_is_negative() {
+            int left = -1;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").left(left))
+                    .hasMessage("left must be greater than or equal to 0");
+        }
+
+        @Test
+        void top_is_negative() {
+            int top = -1;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").top(top))
+                    .hasMessage("top must be greater than or equal to 0");
+        }
     }
 
-    private static DateTimeValue datetime(int year, int month, int dayOfMonth, int hours, int minutes, int seconds) {
-        DateValue d = DateValue.of(year, month, dayOfMonth);
-        TimeValue t = TimeValue.of(hours, minutes, seconds);
-        return DateTimeValue.of(d, t);
+    @Nested
+    class IllegalState {
+
+        @Test
+        void build_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(ib::build)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void left_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.left(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void top_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.top(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
     }
 }
