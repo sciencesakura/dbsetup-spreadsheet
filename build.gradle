@@ -42,11 +42,9 @@ test {
 
 javadoc {
   destinationDir = file("$projectDir/docs")
-  options.encoding = 'utf-8'
-  options.locale = 'en_US'
   options.noTimestamp = true
   options.links(
-    'https://docs.oracle.com/en/java/javase/8/docs/api/',
+    'https://docs.oracle.com/javase/8/docs/api/',
     'http://dbsetup.ninja-squad.com/apidoc/2.1.0/',
     'https://javadoc.io/doc/org.jetbrains/annotations/19.0.0/'
   )
