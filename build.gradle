@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.sciencesakura'
 archivesBaseName = 'dbsetup-spreadsheet'
-version = '0.0.4-SNAPSHOT'
+version = '0.0.4'
 description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 
 repositories {
@@ -71,6 +71,10 @@ publishing {
         name = project.name
         description = project.description
         url = 'https://github.com/sciencesakura/dbsetup-spreadsheet'
+        organization {
+          name = 'sciencesakura.com'
+          url = 'https://www.sciencesakura.com/'
+        }
         licenses {
           license {
             name = 'MIT License'
