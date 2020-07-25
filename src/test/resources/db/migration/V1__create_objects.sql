@@ -1,4 +1,5 @@
 create table table_1 (
+  pk  integer primary key,
   a   integer,
   b   bigint,
   c   decimal(7, 3),

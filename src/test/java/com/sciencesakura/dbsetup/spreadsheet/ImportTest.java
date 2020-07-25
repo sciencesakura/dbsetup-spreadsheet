@@ -26,6 +26,8 @@ package com.sciencesakura.dbsetup.spreadsheet;
 import com.ninja_squad.dbsetup.DbSetup;
 import com.ninja_squad.dbsetup.destination.DataSourceDestination;
 import com.ninja_squad.dbsetup.destination.Destination;
+import com.ninja_squad.dbsetup.generator.ValueGenerator;
+import com.ninja_squad.dbsetup.generator.ValueGenerators;
 import com.ninja_squad.dbsetup.operation.Operation;
 import org.assertj.db.type.Table;
 import org.flywaydb.core.Flyway;
@@ -44,6 +46,8 @@ import static org.assertj.db.api.Assertions.assertThat;
 import static org.assertj.db.type.Table.Order.asc;
 
 class ImportTest {
+
+    private static final Table.Order[] ORDER_BY_PK = {asc("pk")};
 
     private static final Table.Order[] ORDER_BY_A = {asc("a")};
 
@@ -64,11 +68,14 @@ class ImportTest {
     void single_sheet() {
         Operation operation = sequenceOf(
                 truncate("table_1"),
-                excel("data/single_sheet.xlsx").build());
+                excel("data/single_sheet.xlsx")
+                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
+                        .build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
                 .row()
+                .column("pk").value().isEqualTo(1)
                 .column("a").value().isEqualTo(100)
                 .column("b").value().isEqualTo(10000000000L)
                 .column("c").value().isEqualTo(0.5)
@@ -79,6 +86,7 @@ class ImportTest {
                 .column("h").value().isTrue()
                 .column("i").value().isNotNull()
                 .row()
+                .column("pk").value().isEqualTo(2)
                 .column("a").value().isEqualTo(200)
                 .column("b").value().isEqualTo(20000000000L)
                 .column("c").value().isEqualTo(0.25)
@@ -94,11 +102,14 @@ class ImportTest {
     void multiple_sheet() {
         Operation operation = sequenceOf(
                 truncate("table_1", "table_2"),
-                excel("data/multiple_sheet.xlsx").build());
+                excel("data/multiple_sheet.xlsx")
+                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
+                        .build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
                 .row()
+                .column("pk").value().isEqualTo(1)
                 .column("a").value().isEqualTo(100)
                 .column("b").value().isEqualTo(10000000000L)
                 .column("c").value().isEqualTo(0.5)
@@ -109,6 +120,7 @@ class ImportTest {
                 .column("h").value().isTrue()
                 .column("i").value().isNotNull()
                 .row()
+                .column("pk").value().isEqualTo(2)
                 .column("a").value().isEqualTo(200)
                 .column("b").value().isEqualTo(20000000000L)
                 .column("c").value().isEqualTo(0.25)
@@ -156,11 +168,14 @@ class ImportTest {
     void contains_formula() {
         Operation operation = sequenceOf(
                 truncate("table_1"),
-                excel("data/contains_formula.xlsx").build());
+                excel("data/contains_formula.xlsx")
+                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
+                        .build());
         DbSetup dbSetup = new DbSetup(destination, operation);
         dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_A))
+        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
                 .row()
+                .column("pk").value().isEqualTo(1)
                 .column("a").value().isEqualTo(10)
                 .column("b").value().isEqualTo(21)
                 .column("c").value().isEqualTo(10.5)
@@ -193,6 +208,13 @@ class ImportTest {
         }
 
         @Test
+        void location_is_null() {
+            String location = null;
+            assertThatThrownBy(() -> excel(location))
+                    .hasMessage("location must not be null");
+        }
+
+        @Test
         void left_is_negative() {
             int left = -1;
             assertThatThrownBy(() -> excel("data/single_sheet.xlsx").left(left))
@@ -204,6 +226,36 @@ class ImportTest {
             int top = -1;
             assertThatThrownBy(() -> excel("data/single_sheet.xlsx").top(top))
                     .hasMessage("top must be greater than or equal to 0");
+        }
+
+        @Test
+        void value_generator_table_is_null() {
+            String table = null;
+            String column = "column";
+            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("table must not be null");
+        }
+
+        @Test
+        void value_generator_column_is_null() {
+            String table = "table";
+            String column = null;
+            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("column must not be null");
+        }
+
+        @Test
+        void value_generator_generator_is_null() {
+            String table = "table";
+            String column = "column";
+            ValueGenerator<?> valueGenerator = null;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("valueGenerator must not be null");
         }
     }
 
@@ -233,6 +285,15 @@ class ImportTest {
             Import.Builder ib = excel("data/single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.top(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void value_generator_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.withGeneratedValue("table", "column", ValueGenerators.sequence()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage("this operation has been built already");
         }
