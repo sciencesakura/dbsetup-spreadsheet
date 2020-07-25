@@ -24,8 +24,8 @@
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import com.ninja_squad.dbsetup.DbSetupRuntimeException;
-import com.ninja_squad.dbsetup.Operations;
 import com.ninja_squad.dbsetup.bind.BinderConfiguration;
+import com.ninja_squad.dbsetup.operation.CompositeOperation;
 import com.ninja_squad.dbsetup.operation.Insert;
 import com.ninja_squad.dbsetup.operation.Operation;
 import org.apache.poi.ss.usermodel.Cell;
@@ -80,10 +80,12 @@ public class Import implements Operation {
             for (Sheet sheet : workbook) {
                 int rowIndex = top;
                 Row row = sheet.getRow(rowIndex++);
-                if (row == null) throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
+                if (row == null)
+                    throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
                 int width = row.getLastCellNum() - left;
-                if (width <= 0) throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
-                Insert.Builder ib = Operations.insertInto(sheet.getSheetName());
+                if (width <= 0)
+                    throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
+                Insert.Builder ib = Insert.into(sheet.getSheetName());
                 ib.columns(columns(row, left, width, evaluator));
                 while ((row = sheet.getRow(rowIndex++)) != null) {
                     ib.values(values(row, left, width, evaluator));
@@ -93,7 +95,7 @@ public class Import implements Operation {
         } catch (IOException e) {
             throw new DbSetupRuntimeException("failed to open " + builder.location, e);
         }
-        internalOperation = Operations.sequenceOf(operations);
+        internalOperation = CompositeOperation.sequenceOf(operations);
     }
 
     @Override
@@ -128,7 +130,7 @@ public class Import implements Operation {
      *
      * @author sciencesakura
      */
-    public static class Builder {
+    public static final class Builder {
 
         private final URL location;
 
@@ -168,7 +170,8 @@ public class Import implements Operation {
         @NotNull
         public Builder left(int left) {
             requireNotBuilt();
-            if (left < 0) throw new IllegalArgumentException("left must be greater than or equal to 0");
+            if (left < 0)
+                throw new IllegalArgumentException("left must be greater than or equal to 0");
             this.left = left;
             return this;
         }
@@ -185,7 +188,8 @@ public class Import implements Operation {
         @NotNull
         public Builder top(int top) {
             requireNotBuilt();
-            if (top < 0) throw new IllegalArgumentException("top must be greater than or equal to 0");
+            if (top < 0)
+                throw new IllegalArgumentException("top must be greater than or equal to 0");
             this.top = top;
             return this;
         }
