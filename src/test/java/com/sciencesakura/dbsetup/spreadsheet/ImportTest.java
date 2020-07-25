@@ -26,6 +26,7 @@ package com.sciencesakura.dbsetup.spreadsheet;
 import com.ninja_squad.dbsetup.DbSetup;
 import com.ninja_squad.dbsetup.destination.DataSourceDestination;
 import com.ninja_squad.dbsetup.destination.Destination;
+import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.generator.ValueGenerators;
 import com.ninja_squad.dbsetup.operation.Operation;
 import org.assertj.db.type.Table;
@@ -207,6 +208,13 @@ class ImportTest {
         }
 
         @Test
+        void location_is_null() {
+            String location = null;
+            assertThatThrownBy(() -> excel(location))
+                    .hasMessage("location must not be null");
+        }
+
+        @Test
         void left_is_negative() {
             int left = -1;
             assertThatThrownBy(() -> excel("data/single_sheet.xlsx").left(left))
@@ -218,6 +226,36 @@ class ImportTest {
             int top = -1;
             assertThatThrownBy(() -> excel("data/single_sheet.xlsx").top(top))
                     .hasMessage("top must be greater than or equal to 0");
+        }
+
+        @Test
+        void value_generator_table_is_null() {
+            String table = null;
+            String column = "column";
+            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("table must not be null");
+        }
+
+        @Test
+        void value_generator_column_is_null() {
+            String table = "table";
+            String column = null;
+            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("column must not be null");
+        }
+
+        @Test
+        void value_generator_generator_is_null() {
+            String table = "table";
+            String column = "column";
+            ValueGenerator<?> valueGenerator = null;
+            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+                    .withGeneratedValue(table, column, valueGenerator))
+                    .hasMessage("valueGenerator must not be null");
         }
     }
 
@@ -247,6 +285,15 @@ class ImportTest {
             Import.Builder ib = excel("data/single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.top(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void value_generator_after_built() {
+            Import.Builder ib = excel("data/single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.withGeneratedValue("table", "column", ValueGenerators.sequence()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage("this operation has been built already");
         }
