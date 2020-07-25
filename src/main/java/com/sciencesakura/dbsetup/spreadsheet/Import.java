@@ -53,20 +53,20 @@ import static com.sciencesakura.dbsetup.spreadsheet.Cells.valueForHeader;
 import static java.util.Objects.requireNonNull;
 
 /**
- * An Operation which imports a Microsoft Excel file into the tables.
+ * An Operation which imports the Microsoft Excel file into the tables.
  *
  * @author sciencesakura
  */
 public class Import implements Operation {
 
     /**
-     * Create a new builder.
+     * Create a new {@code Import.Builder} instance.
      * <p>
      * The specified location string must be the relative path string from classpath root.
      * </p>
      *
-     * @param location a location of source file that is the relative path from classpath root
-     * @return a new Import.Builder
+     * @param location the location of the source file that is the relative path from classpath root
+     * @return the new {@code Import.Builder} instance
      */
     @NotNull
     public static Builder excel(@NotNull String location) {
@@ -138,7 +138,11 @@ public class Import implements Operation {
     }
 
     /**
-     * A builder to create a {@link Import} instance.
+     * A builder to create the {@code Import} instance.
+     * <p>
+     * This builder can be used only once. Once it has built {@code Import} instance, builder's
+     * methods will throw an {@code IllegalStateException}.
+     * </p>
      *
      * @author sciencesakura
      */
@@ -162,9 +166,10 @@ public class Import implements Operation {
         }
 
         /**
-         * Constructs and returns a new {@link Import} instance.
+         * Build a new {@code Import} instance.
          *
-         * @return a new {@link Import} instance
+         * @return the new {@code Import} instance
+         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
         @NotNull
         public Import build() {
@@ -174,13 +179,14 @@ public class Import implements Operation {
         }
 
         /**
-         * Specifies a start column index of worksheet to read data.
+         * Specifies a start column index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
          *
-         * @param left a 0-based column index, must be non-negative
+         * @param left the 0-based column index, must be non-negative
          * @return the reference to this object
+         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
         @NotNull
         public Builder left(int left) {
@@ -192,13 +198,14 @@ public class Import implements Operation {
         }
 
         /**
-         * Specifies a start row index of worksheet to read data.
+         * Specifies a start row index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
          *
-         * @param top a 0-based row index, must be non-negative
+         * @param top the 0-based row index, must be non-negative
          * @return the reference to this object
+         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
         @NotNull
         public Builder top(int top) {
