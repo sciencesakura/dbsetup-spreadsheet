@@ -148,6 +148,66 @@ class ImportTest {
     }
 
     @Test
+    void generators() {
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("generators.xlsx")
+                .withGeneratedValue("table_1", "a", ValueGenerators.sequence())
+                .withGeneratedValue("table_1", "g", ValueGenerators.stringSequence("G-"))
+                .withGeneratedValue("table_2", "a", ValueGenerators.sequence().startingAt(101))
+                .build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(5)
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(1)
+                .value("g").isEqualTo("G-1")
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(2)
+                .value("g").isEqualTo("G-2")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(101)
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(102)
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(103);
+    }
+
+    @Test
+    void constants() {
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("constants.xlsx")
+                .withDefaultValue("table_1", "g", "G")
+                .withDefaultValue("table_1", "i", null)
+                .withDefaultValue("table_2", "b", "B")
+                .build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(5)
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("g").isEqualTo("G")
+                .value("i").isNull()
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("g").isEqualTo("G")
+                .value("i").isNull()
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("b").isEqualTo("B")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("b").isEqualTo("B")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("b").isEqualTo("B");
+    }
+
+    @Test
     void has_margin() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("has_margin.xlsx")
@@ -232,6 +292,26 @@ class ImportTest {
         }
 
         @Test
+        void default_value_table_is_null() {
+            String table = null;
+            String column = "column";
+            Object value = new Object();
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
+                    .withDefaultValue(table, column, value))
+                    .hasMessage("table must not be null");
+        }
+
+        @Test
+        void default_value_column_is_null() {
+            String table = "table";
+            String column = null;
+            Object value = new Object();
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
+                    .withDefaultValue(table, column, value))
+                    .hasMessage("column must not be null");
+        }
+
+        @Test
         void value_generator_table_is_null() {
             String table = null;
             String column = "column";
@@ -287,6 +367,15 @@ class ImportTest {
             Import.Builder ib = excel("single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.top(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("this operation has been built already");
+        }
+
+        @Test
+        void default_value_after_built() {
+            Import.Builder ib = excel("single_sheet.xlsx");
+            ib.build();
+            assertThatThrownBy(() -> ib.withDefaultValue("table", "column", "value"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage("this operation has been built already");
         }
