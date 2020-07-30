@@ -93,18 +93,23 @@ public class Import implements Operation {
             List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             for (Sheet sheet : workbook) {
+                String sheetName = sheet.getSheetName();
                 int rowIndex = top;
                 Row row = sheet.getRow(rowIndex++);
                 if (row == null)
-                    throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
+                    throw new DbSetupRuntimeException("header not found: " + sheetName);
                 int width = row.getLastCellNum() - left;
                 if (width <= 0)
-                    throw new DbSetupRuntimeException("header not found: " + sheet.getSheetName());
-                Insert.Builder ib = Insert.into(sheet.getSheetName());
+                    throw new DbSetupRuntimeException("header not found: " + sheetName);
+                Insert.Builder ib = Insert.into(sheetName);
                 ib.columns(columns(row, left, width, evaluator));
-                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheet.getSheetName());
+                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
                 if (valueGenerators != null) {
                     valueGenerators.forEach(ib::withGeneratedValue);
+                }
+                Map<String, ?> defaultValues = builder.defaultValues.get(sheetName);
+                if (defaultValues != null) {
+                    defaultValues.forEach(ib::withDefaultValue);
                 }
                 while ((row = sheet.getRow(rowIndex++)) != null) {
                     ib.values(values(row, left, width, evaluator));
@@ -148,6 +153,8 @@ public class Import implements Operation {
      * @author sciencesakura
      */
     public static final class Builder {
+
+        private final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
 
         private final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
 
@@ -218,7 +225,26 @@ public class Import implements Operation {
         }
 
         /**
-         * Add a value generator for the specified table and column.
+         * Specifies a default value for the given pair of table and column.
+         *
+         * @param table  the table name
+         * @param column the column name
+         * @param value  the default value
+         * @return the reference to this object
+         * @throws IllegalStateException if this builder has built an {@code Import} already
+         */
+        @NotNull
+        public Builder withDefaultValue(@NotNull String table, @NotNull String column,
+                                        Object value) {
+            requireNotBuilt();
+            requireNonNull(table, "table must not be null");
+            requireNonNull(column, "column must not be null");
+            defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
+            return this;
+        }
+
+        /**
+         * Specifies a value generator for the given pair of table and column.
          *
          * @param table          the table name
          * @param column         the column name
