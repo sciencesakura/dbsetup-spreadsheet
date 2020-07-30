@@ -67,6 +67,7 @@ public class Import implements Operation {
      *
      * @param location the location of the source file that is the relative path from classpath root
      * @return the new {@code Import.Builder} instance
+     * @throws IllegalArgumentException if the source file was not found
      */
     @NotNull
     public static Builder excel(@NotNull String location) {

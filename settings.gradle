@@ -1,1 +1,4 @@
 rootProject.name = 'dbsetup-spreadsheet'
+include 'core', 'kotlin'
+project(':core').name = 'dbsetup-spreadsheet'
+project(':kotlin').name = 'dbsetup-spreadsheet-kt'
