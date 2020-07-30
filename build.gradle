@@ -19,7 +19,6 @@ dependencies {
   implementation 'org.apache.poi:poi:4.1.2'
   compileOnly 'org.jetbrains:annotations:19.0.0'
 
-  testImplementation 'org.flywaydb:flyway-core:6.5.2'
   testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
   testImplementation 'org.assertj:assertj-db:2.0.0'
   testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2'

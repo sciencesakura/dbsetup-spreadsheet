@@ -24,182 +24,185 @@
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import com.ninja_squad.dbsetup.DbSetup;
-import com.ninja_squad.dbsetup.destination.DataSourceDestination;
 import com.ninja_squad.dbsetup.destination.Destination;
+import com.ninja_squad.dbsetup.destination.DriverManagerDestination;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.generator.ValueGenerators;
 import com.ninja_squad.dbsetup.operation.Operation;
-import org.assertj.db.type.Table;
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Nested;
+import org.assertj.db.type.Changes;
+import org.assertj.db.type.Source;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.sql.DataSource;
-
-import static com.ninja_squad.dbsetup.Operations.sequenceOf;
-import static com.ninja_squad.dbsetup.Operations.truncate;
+import static com.ninja_squad.dbsetup.Operations.sql;
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.db.api.Assertions.assertThat;
-import static org.assertj.db.type.Table.Order.asc;
 
 class ImportTest {
 
-    private static final Table.Order[] ORDER_BY_PK = {asc("pk")};
+    private static final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
 
-    private static final Table.Order[] ORDER_BY_A = {asc("a")};
+    private static final String username = "sa";
 
-    private static DataSource dataSource;
+    private final Destination destination = new DriverManagerDestination(url, username, null);
 
-    private static Destination destination;
+    private final Source source = new Source(url, username, null);
 
-    @BeforeAll
-    static void setUpClass() {
-        String url = "jdbc:h2:mem:ImportTest;DB_CLOSE_DELAY=-1";
-        FluentConfiguration conf = Flyway.configure().dataSource(url, "sa", null);
-        conf.load().migrate();
-        dataSource = conf.getDataSource();
-        destination = DataSourceDestination.with(dataSource);
+    @BeforeEach
+    void setUp() {
+        String[] ddl = {
+                "drop table if exists table_1 cascade",
+                "create table table_1 (" +
+                "  a   integer primary key," +
+                "  b   bigint," +
+                "  c   decimal(7, 3)," +
+                "  d   date," +
+                "  e   timestamp," +
+                "  f   char(3)," +
+                "  g   varchar(6)," +
+                "  h   boolean," +
+                "  i   varchar(6)" +
+                ")",
+                "drop table if exists table_2 cascade",
+                "create table table_2 (" +
+                "  a   integer primary key," +
+                "  b   varchar(6)" +
+                ")"
+        };
+        new DbSetup(destination, sql(ddl)).launch();
     }
 
     @Test
     void single_sheet() {
-        Operation operation = sequenceOf(
-                truncate("table_1"),
-                excel("data/single_sheet.xlsx")
-                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
-                        .build());
-        DbSetup dbSetup = new DbSetup(destination, operation);
-        dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
-                .row()
-                .column("pk").value().isEqualTo(1)
-                .column("a").value().isEqualTo(100)
-                .column("b").value().isEqualTo(10000000000L)
-                .column("c").value().isEqualTo(0.5)
-                .column("d").value().isEqualTo("2019-12-01")
-                .column("e").value().isEqualTo("2019-12-01T09:30:01.001000000")
-                .column("f").value().isEqualTo("AAA")
-                .column("g").value().isEqualTo("甲")
-                .column("h").value().isTrue()
-                .column("i").value().isNotNull()
-                .row()
-                .column("pk").value().isEqualTo(2)
-                .column("a").value().isEqualTo(200)
-                .column("b").value().isEqualTo(20000000000L)
-                .column("c").value().isEqualTo(0.25)
-                .column("d").value().isEqualTo("2019-12-02")
-                .column("e").value().isEqualTo("2019-12-02T09:30:02.002000000")
-                .column("f").value().isEqualTo("BBB")
-                .column("g").value().isEqualTo("乙")
-                .column("h").value().isFalse()
-                .column("i").value().isNull();
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("single_sheet.xlsx").build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(2)
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(100)
+                .value("b").isEqualTo(10000000000L)
+                .value("c").isEqualTo(0.5)
+                .value("d").isEqualTo("2019-12-01")
+                .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
+                .value("f").isEqualTo("AAA")
+                .value("g").isEqualTo("甲")
+                .value("h").isTrue()
+                .value("i").isNotNull()
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(200)
+                .value("b").isEqualTo(20000000000L)
+                .value("c").isEqualTo(0.25)
+                .value("d").isEqualTo("2019-12-02")
+                .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
+                .value("f").isEqualTo("BBB")
+                .value("g").isEqualTo("乙")
+                .value("h").isFalse()
+                .value("i").isNull();
     }
 
     @Test
     void multiple_sheet() {
-        Operation operation = sequenceOf(
-                truncate("table_1", "table_2"),
-                excel("data/multiple_sheet.xlsx")
-                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
-                        .build());
-        DbSetup dbSetup = new DbSetup(destination, operation);
-        dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
-                .row()
-                .column("pk").value().isEqualTo(1)
-                .column("a").value().isEqualTo(100)
-                .column("b").value().isEqualTo(10000000000L)
-                .column("c").value().isEqualTo(0.5)
-                .column("d").value().isEqualTo("2019-12-01")
-                .column("e").value().isEqualTo("2019-12-01T09:30:01.001000000")
-                .column("f").value().isEqualTo("AAA")
-                .column("g").value().isEqualTo("甲")
-                .column("h").value().isTrue()
-                .column("i").value().isNotNull()
-                .row()
-                .column("pk").value().isEqualTo(2)
-                .column("a").value().isEqualTo(200)
-                .column("b").value().isEqualTo(20000000000L)
-                .column("c").value().isEqualTo(0.25)
-                .column("d").value().isEqualTo("2019-12-02")
-                .column("e").value().isEqualTo("2019-12-02T09:30:02.002000000")
-                .column("f").value().isEqualTo("BBB")
-                .column("g").value().isEqualTo("乙")
-                .column("h").value().isFalse()
-                .column("i").value().isNull();
-        assertThat(new Table(dataSource, "table_2", ORDER_BY_A))
-                .row()
-                .column("a").value().isEqualTo(101)
-                .column("b").value().isEqualTo("AAA")
-                .row()
-                .column("a").value().isEqualTo(201)
-                .column("b").value().isEqualTo("BBB")
-                .row()
-                .column("a").value().isEqualTo(301)
-                .column("b").value().isEqualTo("CCC");
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("multiple_sheet.xlsx").build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(5)
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(100)
+                .value("b").isEqualTo(10000000000L)
+                .value("c").isEqualTo(0.5)
+                .value("d").isEqualTo("2019-12-01")
+                .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
+                .value("f").isEqualTo("AAA")
+                .value("g").isEqualTo("甲")
+                .value("h").isTrue()
+                .value("i").isNotNull()
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(200)
+                .value("b").isEqualTo(20000000000L)
+                .value("c").isEqualTo(0.25)
+                .value("d").isEqualTo("2019-12-02")
+                .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
+                .value("f").isEqualTo("BBB")
+                .value("g").isEqualTo("乙")
+                .value("h").isFalse()
+                .value("i").isNull()
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(101)
+                .value("b").isEqualTo("AAA")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(201)
+                .value("b").isEqualTo("BBB")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(301)
+                .value("b").isEqualTo("CCC");
     }
 
     @Test
     void has_margin() {
-        Operation operation = sequenceOf(
-                truncate("table_2"),
-                excel("data/has_margin.xlsx")
-                        .top(2)
-                        .left(1)
-                        .build());
-        DbSetup dbSetup = new DbSetup(destination, operation);
-        dbSetup.launch();
-        assertThat(new Table(dataSource, "table_2", ORDER_BY_A))
-                .row()
-                .column("a").value().isEqualTo(101)
-                .column("b").value().isEqualTo("AAA")
-                .row()
-                .column("a").value().isEqualTo(201)
-                .column("b").value().isEqualTo("BBB")
-                .row()
-                .column("a").value().isEqualTo(301)
-                .column("b").value().isEqualTo("CCC");
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("has_margin.xlsx")
+                .top(2)
+                .left(1)
+                .build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(3)
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(101)
+                .value("b").isEqualTo("AAA")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(201)
+                .value("b").isEqualTo("BBB")
+                .changeOfCreationOnTable("table_2")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(301)
+                .value("b").isEqualTo("CCC");
     }
 
     @Test
     void contains_formula() {
-        Operation operation = sequenceOf(
-                truncate("table_1"),
-                excel("data/contains_formula.xlsx")
-                        .withGeneratedValue("table_1", "pk", ValueGenerators.sequence())
-                        .build());
-        DbSetup dbSetup = new DbSetup(destination, operation);
-        dbSetup.launch();
-        assertThat(new Table(dataSource, "table_1", ORDER_BY_PK))
-                .row()
-                .column("pk").value().isEqualTo(1)
-                .column("a").value().isEqualTo(10)
-                .column("b").value().isEqualTo(21)
-                .column("c").value().isEqualTo(10.5)
-                .column("d").value().isEqualTo("2019-10-21")
-                .column("f").value().isEqualTo("abc")
-                .column("h").value().isFalse();
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("contains_formula.xlsx").build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        assertThat(changes).hasNumberOfChanges(1)
+                .changeOfCreationOnTable("table_1")
+                .rowAtEndPoint()
+                .value("a").isEqualTo(10)
+                .value("b").isEqualTo(21)
+                .value("c").isEqualTo(10.5)
+                .value("d").isEqualTo("2019-10-21")
+                .value("f").isEqualTo("abc")
+                .value("h").isFalse();
     }
 
     @Test
     void contains_error() {
-        Import.Builder ib = excel("data/contains_error.xlsx");
+        Import.Builder ib = excel("contains_error.xlsx");
         assertThatThrownBy(ib::build)
                 .hasMessage("error value contained: table_2!B4");
     }
 
     @Test
     void contains_empty_sheet() {
-        Import.Builder ib = excel("data/contains_empty_sheet.xlsx");
+        Import.Builder ib = excel("contains_empty_sheet.xlsx");
         assertThatThrownBy(ib::build)
                 .hasMessage("header not found: empty_sheet");
     }
 
-    @Nested
-    class IllegalArgument {
+    static class IllegalArgument {
 
         @Test
         void file_not_found() {
@@ -217,14 +220,14 @@ class ImportTest {
         @Test
         void left_is_negative() {
             int left = -1;
-            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").left(left))
+            assertThatThrownBy(() -> excel("single_sheet.xlsx").left(left))
                     .hasMessage("left must be greater than or equal to 0");
         }
 
         @Test
         void top_is_negative() {
             int top = -1;
-            assertThatThrownBy(() -> excel("data/single_sheet.xlsx").top(top))
+            assertThatThrownBy(() -> excel("single_sheet.xlsx").top(top))
                     .hasMessage("top must be greater than or equal to 0");
         }
 
@@ -233,7 +236,7 @@ class ImportTest {
             String table = null;
             String column = "column";
             ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
-            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
                     .withGeneratedValue(table, column, valueGenerator))
                     .hasMessage("table must not be null");
         }
@@ -243,7 +246,7 @@ class ImportTest {
             String table = "table";
             String column = null;
             ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
-            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
                     .withGeneratedValue(table, column, valueGenerator))
                     .hasMessage("column must not be null");
         }
@@ -253,18 +256,17 @@ class ImportTest {
             String table = "table";
             String column = "column";
             ValueGenerator<?> valueGenerator = null;
-            assertThatThrownBy(() -> excel("data/single_sheet.xlsx")
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
                     .withGeneratedValue(table, column, valueGenerator))
                     .hasMessage("valueGenerator must not be null");
         }
     }
 
-    @Nested
-    class IllegalState {
+    static class IllegalState {
 
         @Test
         void build_after_built() {
-            Import.Builder ib = excel("data/single_sheet.xlsx");
+            Import.Builder ib = excel("single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(ib::build)
                     .isInstanceOf(IllegalStateException.class)
@@ -273,7 +275,7 @@ class ImportTest {
 
         @Test
         void left_after_built() {
-            Import.Builder ib = excel("data/single_sheet.xlsx");
+            Import.Builder ib = excel("single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.left(1))
                     .isInstanceOf(IllegalStateException.class)
@@ -282,7 +284,7 @@ class ImportTest {
 
         @Test
         void top_after_built() {
-            Import.Builder ib = excel("data/single_sheet.xlsx");
+            Import.Builder ib = excel("single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.top(1))
                     .isInstanceOf(IllegalStateException.class)
@@ -291,7 +293,7 @@ class ImportTest {
 
         @Test
         void value_generator_after_built() {
-            Import.Builder ib = excel("data/single_sheet.xlsx");
+            Import.Builder ib = excel("single_sheet.xlsx");
             ib.build();
             assertThatThrownBy(() -> ib.withGeneratedValue("table", "column", ValueGenerators.sequence()))
                     .isInstanceOf(IllegalStateException.class)
