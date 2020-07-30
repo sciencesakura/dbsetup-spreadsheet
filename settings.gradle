@@ -1,1 +1,3 @@
 rootProject.name = 'dbsetup-spreadsheet'
+include 'core'
+project(':core').name = 'dbsetup-spreadsheet'

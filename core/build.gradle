@@ -1,0 +1,39 @@
+plugins {
+  id 'com.github.spotbugs' version '4.4.4'
+}
+
+dependencies {
+  api 'com.ninja-squad:DbSetup:2.1.0'
+  implementation 'org.apache.poi:poi:4.1.2'
+  compileOnly 'org.jetbrains:annotations:19.0.0'
+
+  testRuntimeOnly 'com.h2database:h2:1.4.200'
+  testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2'
+  testImplementation 'org.assertj:assertj-db:2.0.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+  withJavadocJar()
+  withSourcesJar()
+}
+
+test {
+  useJUnitPlatform()
+}
+
+javadoc {
+  destinationDir = file("$rootDir/docs/core")
+  options.noTimestamp = true
+  options.links(
+    'https://docs.oracle.com/javase/8/docs/api/',
+    'http://dbsetup.ninja-squad.com/apidoc/2.1.0/',
+    'https://javadoc.io/doc/org.jetbrains/annotations/19.0.0/'
+  )
+}
+
+clean {
+  delete << javadoc.destinationDir
+}
