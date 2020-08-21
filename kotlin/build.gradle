@@ -26,7 +26,10 @@ test {
 }
 
 dokka {
-  outputDirectory = file("$rootDir/docs/kt")
+  outputDirectory = file("$rootDir/docs/kotlin")
+  configuration {
+    jdkVersion = 8
+  }
 }
 
 clean {

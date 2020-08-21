@@ -1,1 +1,2 @@
-docs/** linguist-generated
+docs/core/** linguist-generated
+docs/kotlin/** linguist-generated
