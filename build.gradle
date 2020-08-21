@@ -16,10 +16,16 @@ subprojects {
 
   jar {
     manifest {
+      def vendor = project.group.split('\\.').reverse().join('.')
       attributes(
         'Implementation-Title': project.name,
-        'Implementation-Vendor': project.group.split('\\.').reverse().join('.'),
-        'Implementation-Version': project.version
+        'Implementation-Vendor': vendor,
+        'Implementation-Version': project.version,
+        'Bundle-ManifestVersion': 2,
+        'Bundle-Name': project.name,
+        'Bundle-SymbolicName': "${project.group}.${project.name}",
+        'Bundle-Vendor': vendor,
+        'Bundle-Version': project.version
       )
     }
     metaInf {
