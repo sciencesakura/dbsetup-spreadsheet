@@ -44,8 +44,28 @@ dokka {
   }
 }
 
+task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+  outputDirectory = temporaryDir
+  outputFormat = 'javadoc'
+  configuration {
+    jdkVersion = 8
+  }
+}
+
+task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
+  archiveClassifier.set('javadoc')
+  from dokkaJavadoc.outputDirectory
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      artifact kotlinSourcesJar
+      artifact javadocJar
+    }
+  }
+}
+
 clean {
   delete dokka.outputDirectory
 }
-
-assemble.dependsOn(kotlinSourcesJar)
