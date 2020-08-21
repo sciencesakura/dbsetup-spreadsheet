@@ -24,6 +24,20 @@ test {
   useJUnitPlatform()
 }
 
+jar {
+  manifest {
+    attributes(
+      'Export-Package': 'com.sciencesakura.dbsetup.spreadsheet',
+      'Import-Package': 'com.ninja_squad.dbsetup,'
+        + 'com.ninja_squad.dbsetup.bind,'
+        + 'com.ninja_squad.dbsetup.generator,'
+        + 'com.ninja_squad.dbsetup.operation,'
+        + 'org.apache.poi.ss.usermodel,'
+        + 'org.apache.poi.ss.util'
+    )
+  }
+}
+
 javadoc {
   destinationDir = file("$rootDir/docs/core")
   options.noTimestamp = true

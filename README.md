@@ -8,15 +8,20 @@ A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Micro
 
 ## Requirement
 
-* Java 8 or later
+* Java 8+
 
 ## Installation
 
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.0.4'
-testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2' // if import *.xlsx
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.1.0'
+
+// optional - Kotlin Extensions
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:0.1.0'
+
+// optional - When import *.xlsx files
+testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2'
 ```
 
 Maven:
@@ -25,10 +30,20 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>0.0.4</version>
+  <version>0.1.0</version>
   <scope>test</scope>
 </dependency>
-<dependency><!-- if import *.xlsx -->
+
+<!-- optional - Kotlin Extensions -->
+<dependency>
+  <groupId>com.sciencesakura</groupId>
+  <artifactId>dbsetup-spreadsheet-kt</artifactId>
+  <version>0.1.0</version>
+  <scope>test</scope>
+</dependency>
+
+<!-- optional - When import *.xlsx files -->
+<dependency>
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
   <version>4.1.2</version>
@@ -76,7 +91,9 @@ Create An Excel file with one worksheet per table, and name those worksheets the
 | 2|Sakura|3|
 | 3|Xiaolang|2|
 
-Put the prepared Excel file on the classpath, and write code like below:
+Put the prepared Excel file on the classpath, and write code like below.
+
+Java:
 
 ```java
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
@@ -86,11 +103,15 @@ DbSetup dbSetup = new DbSetup(destination, operation);
 dbSetup.launch();
 ```
 
+Kotlin:
+
+```kotlin
+dbSetup(destination) {
+    excel("testdata.xlsx")
+}.launch()
+```
+
 See [API reference](https://sciencesakura.github.io/dbsetup-spreadsheet/) for details.
-
-## Recommendation
-
-We recommend using this extension only when the destination table has too many columns to keep your code using the [Insert.Builder](http://dbsetup.ninja-squad.com/apidoc/2.1.0/com/ninja_squad/dbsetup/operation/Insert.Builder.html) class readable.
 
 ## Prefer CSV ?
 

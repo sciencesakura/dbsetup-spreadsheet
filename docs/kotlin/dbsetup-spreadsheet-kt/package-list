@@ -1,0 +1,5 @@
+$dokka.format:html
+$dokka.linkExtension:html
+$dokka.location:com.sciencesakura.dbsetup.spreadsheet$excel(com.ninja_squad.dbsetup_kotlin.DbSetupBuilder, kotlin.String)com.sciencesakura.dbsetup.spreadsheet/com.ninja_squad.dbsetup_kotlin.-db-setup-builder/excel.html
+$dokka.location:com.sciencesakura.dbsetup.spreadsheet$excel(com.ninja_squad.dbsetup_kotlin.DbSetupBuilder, kotlin.String, kotlin.Function1((com.sciencesakura.dbsetup.spreadsheet.Import.Builder, kotlin.Unit)))com.sciencesakura.dbsetup.spreadsheet/com.ninja_squad.dbsetup_kotlin.-db-setup-builder/excel.html
+com.sciencesakura.dbsetup.spreadsheet
