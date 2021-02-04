@@ -15,13 +15,13 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.1.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.1.1'
 
 // optional - Kotlin Extensions
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:0.1.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:0.1.1'
 
 // optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:4.1.2'
+testRuntimeOnly 'org.apache.poi:poi-ooxml:5.0.0'
 ```
 
 Maven:
@@ -30,7 +30,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <scope>test</scope>
 </dependency>
 
@@ -38,7 +38,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <scope>test</scope>
 </dependency>
 
@@ -46,7 +46,7 @@ Maven:
 <dependency>
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>4.1.2</version>
+  <version>5.0.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -106,6 +106,8 @@ dbSetup.launch();
 Kotlin:
 
 ```kotlin
+import com.sciencesakura.dbsetup.spreadsheet.excel
+
 dbSetup(destination) {
     excel("testdata.xlsx")
 }.launch()
