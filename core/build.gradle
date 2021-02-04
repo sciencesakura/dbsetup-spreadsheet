@@ -20,6 +20,10 @@ java {
   withSourcesJar()
 }
 
+spotbugs {
+  excludeFilter.set(file("$projectDir/config/spotbugs/exclude.xml"))
+}
+
 test {
   useJUnitPlatform()
 }
