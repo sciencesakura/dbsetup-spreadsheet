@@ -45,36 +45,37 @@ class ImportTest {
 
     private static final String username = "sa";
 
-    private final Destination destination = new DriverManagerDestination(url, username, null);
+    private static final Source source = new Source(url, username, null);
 
-    private final Source source = new Source(url, username, null);
+    private static final Destination destination = new DriverManagerDestination(url, username, null);
+
+    private static final Operation setUpQueries = sql(
+        "drop table if exists table_1 cascade",
+        "create table table_1 (" +
+            "  a   integer primary key," +
+            "  b   bigint," +
+            "  c   decimal(7, 3)," +
+            "  d   date," +
+            "  e   timestamp," +
+            "  f   char(3)," +
+            "  g   varchar(6)," +
+            "  h   boolean," +
+            "  i   varchar(6)" +
+            ")",
+        "drop table if exists table_2 cascade",
+        "create table table_2 (" +
+            "  a   integer primary key," +
+            "  b   varchar(6)" +
+            ")"
+    );
 
     @BeforeEach
     void setUp() {
-        String[] ddl = {
-                "drop table if exists table_1 cascade",
-                "create table table_1 (" +
-                "  a   integer primary key," +
-                "  b   bigint," +
-                "  c   decimal(7, 3)," +
-                "  d   date," +
-                "  e   timestamp," +
-                "  f   char(3)," +
-                "  g   varchar(6)," +
-                "  h   boolean," +
-                "  i   varchar(6)" +
-                ")",
-                "drop table if exists table_2 cascade",
-                "create table table_2 (" +
-                "  a   integer primary key," +
-                "  b   varchar(6)" +
-                ")"
-        };
-        new DbSetup(destination, sql(ddl)).launch();
+        new DbSetup(destination, setUpQueries).launch();
     }
 
     @Test
-    void single_sheet() {
+    void import_single_sheet() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("single_sheet.xlsx").build();
         new DbSetup(destination, operation).launch();
@@ -105,7 +106,7 @@ class ImportTest {
     }
 
     @Test
-    void multiple_sheet() {
+    void import_multiple_sheet() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("multiple_sheet.xlsx").build();
         new DbSetup(destination, operation).launch();
@@ -148,7 +149,7 @@ class ImportTest {
     }
 
     @Test
-    void generators() {
+    void use_generators() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("generators.xlsx")
                 .withGeneratedValue("table_1", "a", ValueGenerators.sequence())
@@ -178,7 +179,7 @@ class ImportTest {
     }
 
     @Test
-    void constants() {
+    void use_constants() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("constants.xlsx")
                 .withDefaultValue("table_1", "g", "G")
@@ -208,7 +209,7 @@ class ImportTest {
     }
 
     @Test
-    void has_margin() {
+    void import_sheet_that_has_margin() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("has_margin.xlsx")
                 .top(2)
@@ -232,7 +233,7 @@ class ImportTest {
     }
 
     @Test
-    void contains_formula() {
+    void import_sheet_that_contains_formula() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("contains_formula.xlsx").build();
         new DbSetup(destination, operation).launch();
@@ -249,14 +250,14 @@ class ImportTest {
     }
 
     @Test
-    void contains_error() {
+    void import_sheet_that_contains_error() {
         Import.Builder ib = excel("contains_error.xlsx");
         assertThatThrownBy(ib::build)
                 .hasMessage("error value contained: table_2!B4");
     }
 
     @Test
-    void contains_empty_sheet() {
+    void import_sheet_that_contains_empty_sheet() {
         Import.Builder ib = excel("contains_empty_sheet.xlsx");
         assertThatThrownBy(ib::build)
                 .hasMessage("header not found: empty_sheet");
@@ -339,54 +340,6 @@ class ImportTest {
             assertThatThrownBy(() -> excel("single_sheet.xlsx")
                     .withGeneratedValue(table, column, valueGenerator))
                     .hasMessage("valueGenerator must not be null");
-        }
-    }
-
-    static class IllegalState {
-
-        @Test
-        void build_after_built() {
-            Import.Builder ib = excel("single_sheet.xlsx");
-            ib.build();
-            assertThatThrownBy(ib::build)
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("this operation has been built already");
-        }
-
-        @Test
-        void left_after_built() {
-            Import.Builder ib = excel("single_sheet.xlsx");
-            ib.build();
-            assertThatThrownBy(() -> ib.left(1))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("this operation has been built already");
-        }
-
-        @Test
-        void top_after_built() {
-            Import.Builder ib = excel("single_sheet.xlsx");
-            ib.build();
-            assertThatThrownBy(() -> ib.top(1))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("this operation has been built already");
-        }
-
-        @Test
-        void default_value_after_built() {
-            Import.Builder ib = excel("single_sheet.xlsx");
-            ib.build();
-            assertThatThrownBy(() -> ib.withDefaultValue("table", "column", "value"))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("this operation has been built already");
-        }
-
-        @Test
-        void value_generator_after_built() {
-            Import.Builder ib = excel("single_sheet.xlsx");
-            ib.build();
-            assertThatThrownBy(() -> ib.withGeneratedValue("table", "column", ValueGenerators.sequence()))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("this operation has been built already");
         }
     }
 }

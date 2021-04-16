@@ -57,7 +57,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author sciencesakura
  */
-public class Import implements Operation {
+public final class Import implements Operation {
 
     /**
      * Create a new {@code Import.Builder} instance.
@@ -96,11 +96,13 @@ public class Import implements Operation {
                 String sheetName = sheet.getSheetName();
                 int rowIndex = top;
                 Row row = sheet.getRow(rowIndex++);
-                if (row == null)
+                if (row == null) {
                     throw new DbSetupRuntimeException("header not found: " + sheetName);
+                }
                 int width = row.getLastCellNum() - left;
-                if (width <= 0)
+                if (width <= 0) {
                     throw new DbSetupRuntimeException("header not found: " + sheetName);
+                }
                 Insert.Builder ib = Insert.into(sheetName);
                 ib.columns(columns(row, left, width, evaluator));
                 Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
@@ -145,10 +147,6 @@ public class Import implements Operation {
 
     /**
      * A builder to create the {@code Import} instance.
-     * <p>
-     * This builder can be used only once. Once it has built {@code Import} instance, builder's
-     * methods will throw an {@code IllegalStateException}.
-     * </p>
      *
      * @author sciencesakura
      */
@@ -160,8 +158,6 @@ public class Import implements Operation {
 
         private final URL location;
 
-        private boolean built;
-
         private int left;
 
         private int top;
@@ -169,20 +165,18 @@ public class Import implements Operation {
         private Builder(String location) {
             requireNonNull(location, "location must not be null");
             this.location = getClass().getClassLoader().getResource(location);
-            if (this.location == null)
+            if (this.location == null) {
                 throw new IllegalArgumentException(location + " not found");
+            }
         }
 
         /**
          * Build a new {@code Import} instance.
          *
          * @return the new {@code Import} instance
-         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
         @NotNull
         public Import build() {
-            requireNotBuilt();
-            built = true;
             return new Import(this);
         }
 
@@ -194,13 +188,11 @@ public class Import implements Operation {
          *
          * @param left the 0-based column index, must be non-negative
          * @return the reference to this object
-         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
-        @NotNull
         public Builder left(int left) {
-            requireNotBuilt();
-            if (left < 0)
+            if (left < 0) {
                 throw new IllegalArgumentException("left must be greater than or equal to 0");
+            }
             this.left = left;
             return this;
         }
@@ -213,13 +205,11 @@ public class Import implements Operation {
          *
          * @param top the 0-based row index, must be non-negative
          * @return the reference to this object
-         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
-        @NotNull
         public Builder top(int top) {
-            requireNotBuilt();
-            if (top < 0)
+            if (top < 0) {
                 throw new IllegalArgumentException("top must be greater than or equal to 0");
+            }
             this.top = top;
             return this;
         }
@@ -231,12 +221,9 @@ public class Import implements Operation {
          * @param column the column name
          * @param value  the default value
          * @return the reference to this object
-         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
-        @NotNull
         public Builder withDefaultValue(@NotNull String table, @NotNull String column,
                                         Object value) {
-            requireNotBuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
@@ -250,21 +237,14 @@ public class Import implements Operation {
          * @param column         the column name
          * @param valueGenerator the generator
          * @return the reference to this object
-         * @throws IllegalStateException if this builder has built an {@code Import} already
          */
-        @NotNull
         public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
                                           @NotNull ValueGenerator<?> valueGenerator) {
-            requireNotBuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");
             valueGenerators.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, valueGenerator);
             return this;
-        }
-
-        private void requireNotBuilt() {
-            if (built) throw new IllegalStateException("this operation has been built already");
         }
     }
 }
