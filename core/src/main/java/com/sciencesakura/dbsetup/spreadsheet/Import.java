@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.sciencesakura.dbsetup.spreadsheet.Cells.a1;
 import static com.sciencesakura.dbsetup.spreadsheet.Cells.valueForData;
@@ -74,37 +75,27 @@ public final class Import implements Operation {
         return new Builder(location);
     }
 
-    private static String[] columns(Row row, int left, int width, FormulaEvaluator evaluator) {
-        String[] columns = new String[width];
-        for (int i = 0; i < width; i++) {
-            int c = left + i;
-            Cell cell = row.getCell(c);
-            if (cell == null)
-                throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
-            columns[i] = valueForHeader(cell, evaluator);
-        }
-        return columns;
-    }
-
     private static List<Operation> operations(Builder builder) {
-        int top = builder.top;
-        int left = builder.left;
+        boolean enableExclude = builder.exclude != null;
         try (Workbook workbook = WorkbookFactory.create(builder.location.openStream())) {
             List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            for (Sheet sheet : workbook) {
+            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
+                Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                int rowIndex = top;
+                if (enableExclude && builder.exclude.matcher(sheetName).matches()) continue;
+                int rowIndex = builder.top;
                 Row row = sheet.getRow(rowIndex++);
                 if (row == null) {
-                    throw new DbSetupRuntimeException("header not found: " + sheetName);
+                    throw new DbSetupRuntimeException("header row not found: " + sheetName);
                 }
-                int width = row.getLastCellNum() - left;
+                int width = row.getLastCellNum() - builder.left;
                 if (width <= 0) {
-                    throw new DbSetupRuntimeException("header not found: " + sheetName);
+                    throw new DbSetupRuntimeException("header row not found: " + sheetName);
                 }
                 Insert.Builder ib = Insert.into(sheetName);
-                ib.columns(columns(row, left, width, evaluator));
+                ib.columns(columns(row, builder.left, width, evaluator));
                 Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
                 if (valueGenerators != null) {
                     valueGenerators.forEach(ib::withGeneratedValue);
@@ -114,7 +105,7 @@ public final class Import implements Operation {
                     defaultValues.forEach(ib::withDefaultValue);
                 }
                 while ((row = sheet.getRow(rowIndex++)) != null) {
-                    ib.values(values(row, left, width, evaluator));
+                    ib.values(values(row, builder.left, width, evaluator));
                 }
                 operations.add(ib.build());
             }
@@ -122,6 +113,19 @@ public final class Import implements Operation {
         } catch (IOException e) {
             throw new DbSetupRuntimeException("failed to open " + builder.location, e);
         }
+    }
+
+    private static String[] columns(Row row, int left, int width, FormulaEvaluator evaluator) {
+        String[] columns = new String[width];
+        for (int i = 0; i < width; i++) {
+            int c = left + i;
+            Cell cell = row.getCell(c);
+            if (cell == null) {
+                throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
+            }
+            columns[i] = valueForHeader(cell, evaluator);
+        }
+        return columns;
     }
 
     private static Object[] values(Row row, int left, int width, FormulaEvaluator evaluator) {
@@ -158,6 +162,8 @@ public final class Import implements Operation {
 
         private final URL location;
 
+        private Pattern exclude;
+
         private int left;
 
         private int top;
@@ -178,6 +184,28 @@ public final class Import implements Operation {
         @NotNull
         public Import build() {
             return new Import(this);
+        }
+
+        /**
+         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         *
+         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @return the reference to this object
+         */
+        public Builder exclude(@NotNull String exclude) {
+            this.exclude = Pattern.compile(requireNonNull(exclude, "exclude must not be null"));
+            return this;
+        }
+
+        /**
+         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         *
+         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @return the reference to this object
+         */
+        public Builder exclude(@NotNull Pattern exclude) {
+            this.exclude = requireNonNull(exclude, "exclude must not be null");
+            return this;
         }
 
         /**

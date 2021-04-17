@@ -34,6 +34,8 @@ import org.assertj.db.type.Source;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
 import static com.ninja_squad.dbsetup.Operations.sql;
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,29 +82,7 @@ class ImportTest {
         Operation operation = excel("single_sheet.xlsx").build();
         new DbSetup(destination, operation).launch();
         changes.setEndPointNow();
-        assertThat(changes).hasNumberOfChanges(2)
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(100)
-                .value("b").isEqualTo(10000000000L)
-                .value("c").isEqualTo(0.5)
-                .value("d").isEqualTo("2019-12-01")
-                .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
-                .value("f").isEqualTo("AAA")
-                .value("g").isEqualTo("甲")
-                .value("h").isTrue()
-                .value("i").isNotNull()
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(200)
-                .value("b").isEqualTo(20000000000L)
-                .value("c").isEqualTo(0.25)
-                .value("d").isEqualTo("2019-12-02")
-                .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
-                .value("f").isEqualTo("BBB")
-                .value("g").isEqualTo("乙")
-                .value("h").isFalse()
-                .value("i").isNull();
+        validateChangesForSingleSheet(changes);
     }
 
     @Test
@@ -111,71 +91,41 @@ class ImportTest {
         Operation operation = excel("multiple_sheet.xlsx").build();
         new DbSetup(destination, operation).launch();
         changes.setEndPointNow();
-        assertThat(changes).hasNumberOfChanges(5)
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(100)
-                .value("b").isEqualTo(10000000000L)
-                .value("c").isEqualTo(0.5)
-                .value("d").isEqualTo("2019-12-01")
-                .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
-                .value("f").isEqualTo("AAA")
-                .value("g").isEqualTo("甲")
-                .value("h").isTrue()
-                .value("i").isNotNull()
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(200)
-                .value("b").isEqualTo(20000000000L)
-                .value("c").isEqualTo(0.25)
-                .value("d").isEqualTo("2019-12-02")
-                .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
-                .value("f").isEqualTo("BBB")
-                .value("g").isEqualTo("乙")
-                .value("h").isFalse()
-                .value("i").isNull()
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(101)
-                .value("b").isEqualTo("AAA")
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(201)
-                .value("b").isEqualTo("BBB")
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(301)
-                .value("b").isEqualTo("CCC");
+        validateChangesForMultipleSheet(changes);
+    }
+
+    @Test
+    void use_string_exclude() {
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("exclude.xlsx")
+            .exclude(".+x$")
+            .build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        validateChangesForSingleSheet(changes);
+    }
+
+    @Test
+    void use_pattern_exclude() {
+        Changes changes = new Changes(source).setStartPointNow();
+        Operation operation = excel("exclude.xlsx")
+            .exclude(Pattern.compile(".+x$"))
+            .build();
+        new DbSetup(destination, operation).launch();
+        changes.setEndPointNow();
+        validateChangesForSingleSheet(changes);
     }
 
     @Test
     void use_generators() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("generators.xlsx")
-                .withGeneratedValue("table_1", "a", ValueGenerators.sequence())
-                .withGeneratedValue("table_1", "g", ValueGenerators.stringSequence("G-"))
-                .withGeneratedValue("table_2", "a", ValueGenerators.sequence().startingAt(101))
+                .withGeneratedValue("table_1", "a", ValueGenerators.sequence().startingAt(100).incrementingBy(100))
+                .withGeneratedValue("table_2", "a", ValueGenerators.sequence().startingAt(101).incrementingBy(100))
                 .build();
         new DbSetup(destination, operation).launch();
         changes.setEndPointNow();
-        assertThat(changes).hasNumberOfChanges(5)
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(1)
-                .value("g").isEqualTo("G-1")
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(2)
-                .value("g").isEqualTo("G-2")
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(101)
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(102)
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(103);
+        validateChangesForMultipleSheet(changes);
     }
 
     @Test
@@ -217,19 +167,7 @@ class ImportTest {
                 .build();
         new DbSetup(destination, operation).launch();
         changes.setEndPointNow();
-        assertThat(changes).hasNumberOfChanges(3)
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(101)
-                .value("b").isEqualTo("AAA")
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(201)
-                .value("b").isEqualTo("BBB")
-                .changeOfCreationOnTable("table_2")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(301)
-                .value("b").isEqualTo("CCC");
+        validateChangesForSingleSheet(changes);
     }
 
     @Test
@@ -238,15 +176,7 @@ class ImportTest {
         Operation operation = excel("contains_formula.xlsx").build();
         new DbSetup(destination, operation).launch();
         changes.setEndPointNow();
-        assertThat(changes).hasNumberOfChanges(1)
-                .changeOfCreationOnTable("table_1")
-                .rowAtEndPoint()
-                .value("a").isEqualTo(10)
-                .value("b").isEqualTo(21)
-                .value("c").isEqualTo(10.5)
-                .value("d").isEqualTo("2019-10-21")
-                .value("f").isEqualTo("abc")
-                .value("h").isFalse();
+        validateChangesForSingleSheet(changes);
     }
 
     @Test
@@ -260,7 +190,71 @@ class ImportTest {
     void import_sheet_that_contains_empty_sheet() {
         Import.Builder ib = excel("contains_empty_sheet.xlsx");
         assertThatThrownBy(ib::build)
-                .hasMessage("header not found: empty_sheet");
+                .hasMessage("header row not found: empty_sheet");
+    }
+
+    private static void validateChangesForSingleSheet(Changes changes) {
+        assertThat(changes).hasNumberOfChanges(2)
+            .changeOfCreationOnTable("table_1")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(100)
+            .value("b").isEqualTo(10000000000L)
+            .value("c").isEqualTo(0.5)
+            .value("d").isEqualTo("2019-12-01")
+            .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
+            .value("f").isEqualTo("AAA")
+            .value("g").isEqualTo("甲")
+            .value("h").isTrue()
+            .value("i").isNotNull()
+            .changeOfCreationOnTable("table_1")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(200)
+            .value("b").isEqualTo(20000000000L)
+            .value("c").isEqualTo(0.25)
+            .value("d").isEqualTo("2019-12-02")
+            .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
+            .value("f").isEqualTo("BBB")
+            .value("g").isEqualTo("乙")
+            .value("h").isFalse()
+            .value("i").isNull();
+    }
+
+    private static void validateChangesForMultipleSheet(Changes changes) {
+        assertThat(changes).hasNumberOfChanges(5)
+            .changeOfCreationOnTable("table_1")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(100)
+            .value("b").isEqualTo(10000000000L)
+            .value("c").isEqualTo(0.5)
+            .value("d").isEqualTo("2019-12-01")
+            .value("e").isEqualTo("2019-12-01T09:30:01.001000000")
+            .value("f").isEqualTo("AAA")
+            .value("g").isEqualTo("甲")
+            .value("h").isTrue()
+            .value("i").isNotNull()
+            .changeOfCreationOnTable("table_1")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(200)
+            .value("b").isEqualTo(20000000000L)
+            .value("c").isEqualTo(0.25)
+            .value("d").isEqualTo("2019-12-02")
+            .value("e").isEqualTo("2019-12-02T09:30:02.002000000")
+            .value("f").isEqualTo("BBB")
+            .value("g").isEqualTo("乙")
+            .value("h").isFalse()
+            .value("i").isNull()
+            .changeOfCreationOnTable("table_2")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(101)
+            .value("b").isEqualTo("AAA")
+            .changeOfCreationOnTable("table_2")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(201)
+            .value("b").isEqualTo("BBB")
+            .changeOfCreationOnTable("table_2")
+            .rowAtEndPoint()
+            .value("a").isEqualTo(301)
+            .value("b").isEqualTo("CCC");
     }
 
     static class IllegalArgument {
@@ -276,6 +270,22 @@ class ImportTest {
             String location = null;
             assertThatThrownBy(() -> excel(location))
                     .hasMessage("location must not be null");
+        }
+
+        @Test
+        void string_exclude_is_null() {
+            String exclude = null;
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
+                .exclude(exclude))
+                .hasMessage("exclude must not be null");
+        }
+
+        @Test
+        void pattern_exclude_is_null() {
+            Pattern exclude = null;
+            assertThatThrownBy(() -> excel("single_sheet.xlsx")
+                .exclude(exclude))
+                .hasMessage("exclude must not be null");
         }
 
         @Test

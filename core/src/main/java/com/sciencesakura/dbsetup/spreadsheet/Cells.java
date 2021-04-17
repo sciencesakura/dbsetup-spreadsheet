@@ -69,11 +69,11 @@ final class Cells {
         case FORMULA:
             return valueForHeader(evaluator.evaluateInCell(cell), evaluator);
         case BLANK:
-            throw new DbSetupRuntimeException("must not be null: " + a1(cell));
+            throw new DbSetupRuntimeException("header cell must not be null: " + a1(cell));
         case ERROR:
             throw new DbSetupRuntimeException("error value contained: " + a1(cell));
         default:
-            throw new DbSetupRuntimeException("must be string type: " + a1(cell));
+            throw new DbSetupRuntimeException("header cell must be string type: " + a1(cell));
         }
     }
 }
