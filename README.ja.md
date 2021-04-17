@@ -6,7 +6,7 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 
 ![](https://github.com/sciencesakura/dbsetup-spreadsheet/workflows/build/badge.svg)
 
-## Requirement
+## Requirements
 
 * Java 8+
 
@@ -15,10 +15,10 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:0.1.1'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.0'
 
 // optional - Kotlin Extensions
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:0.1.1'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.0'
 
 // optional - When import *.xlsx files
 testRuntimeOnly 'org.apache.poi:poi-ooxml:5.0.0'
@@ -30,7 +30,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>0.1.1</version>
+  <version>1.0.0</version>
   <scope>test</scope>
 </dependency>
 
@@ -38,7 +38,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>0.1.1</version>
+  <version>1.0.0</version>
   <scope>test</scope>
 </dependency>
 
