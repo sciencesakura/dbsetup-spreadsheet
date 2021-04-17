@@ -1,11 +1,14 @@
 allprojects {
   group = 'com.sciencesakura'
-  version = '0.1.2-SNAPSHOT'
+  version = '1.0.0-SNAPSHOT'
   description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 
   repositories {
     mavenCentral()
-    jcenter()
+    maven {
+      // for kotlinx-html-jvm
+      url = 'https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven'
+    }
   }
 }
 
@@ -27,9 +30,6 @@ subprojects {
         'Bundle-Vendor': vendor,
         'Bundle-Version': project.version
       )
-    }
-    metaInf {
-      from file("$projectDir/LICENSE")
     }
   }
 

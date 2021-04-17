@@ -34,25 +34,24 @@ import org.junit.jupiter.api.Test
 
 private const val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
 private const val username = "sa"
+private val source = Source(url, username, null)
+private val destination = DriverManagerDestination(url, username, null)
+private val setUpQueries = arrayOf(
+    "drop table if exists table_1 cascade",
+    """
+    create table table_1 (
+      a integer primary key,
+      b integer
+    )
+    """
+)
 
 class ExcelTest {
-
-    private val destination = DriverManagerDestination(url, username, null)
-
-    private val source = Source(url, username, null)
 
     @BeforeEach
     fun setUp() {
         dbSetup(destination) {
-            sql("drop table if exists table_1")
-            sql(
-                """
-                create table table_1 (
-                  a integer primary key,
-                  b integer
-                )
-                """
-            )
+            sql(*setUpQueries)
         }.launch()
     }
 
