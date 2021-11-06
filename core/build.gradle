@@ -47,3 +47,10 @@ javadoc {
     'http://dbsetup.ninja-squad.com/apidoc/2.1.0/'
   )
 }
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+  reports {
+    xml.enabled = false
+    html.enabled = true
+  }
+}
