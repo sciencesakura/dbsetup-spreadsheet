@@ -49,8 +49,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static com.sciencesakura.dbsetup.spreadsheet.Cells.a1;
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.valueForData;
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.valueForHeader;
+import static com.sciencesakura.dbsetup.spreadsheet.Cells.value;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -174,16 +173,16 @@ public final class Import implements Operation {
                 String sheetName = sheet.getSheetName();
                 if (enableExclude && builder.exclude.matcher(sheetName).matches()) continue;
                 int rowIndex = builder.top;
-                Row row = sheet.getRow(rowIndex++);
+                Row row = sheet.getRow(rowIndex);
                 if (row == null) {
-                    throw new DbSetupRuntimeException("header row not found: " + sheetName);
+                    throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
                 }
                 int width = row.getLastCellNum() - builder.left;
                 if (width <= 0) {
-                    throw new DbSetupRuntimeException("header row not found: " + sheetName);
+                    throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
                 }
-                Insert.Builder ib = Insert.into(sheetName);
-                ib.columns(columns(row, builder.left, width, evaluator));
+                Insert.Builder ib = Insert.into(sheetName)
+                    .columns(columns(row, builder.left, width, evaluator));
                 Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
                 if (valueGenerators != null) {
                     valueGenerators.forEach(ib::withGeneratedValue);
@@ -192,7 +191,7 @@ public final class Import implements Operation {
                 if (defaultValues != null) {
                     defaultValues.forEach(ib::withDefaultValue);
                 }
-                while ((row = sheet.getRow(rowIndex++)) != null) {
+                while ((row = sheet.getRow(++rowIndex)) != null) {
                     ib.values(values(row, builder.left, width, evaluator));
                 }
                 operations.add(ib.build());
@@ -211,7 +210,13 @@ public final class Import implements Operation {
             if (cell == null) {
                 throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
             }
-            columns[i] = valueForHeader(cell, evaluator);
+            Object value = value(cell, evaluator);
+            if (value == null || "".equals(value)) {
+                throw new DbSetupRuntimeException("header cell must not be blank: " + a1(cell));
+            } else if (!(value instanceof String)) {
+                throw new DbSetupRuntimeException("header cell must be string type: " + a1(cell));
+            }
+            columns[i] = (String) value;
         }
         return columns;
     }
@@ -219,9 +224,8 @@ public final class Import implements Operation {
     private static Object[] values(Row row, int left, int width, FormulaEvaluator evaluator) {
         Object[] values = new Object[width];
         for (int i = 0; i < width; i++) {
-            int c = left + i;
-            Cell cell = row.getCell(c);
-            values[i] = cell == null ? null : valueForData(cell, evaluator);
+            Cell cell = row.getCell(left + i);
+            values[i] = cell == null ? null : value(cell, evaluator);
         }
         return values;
     }

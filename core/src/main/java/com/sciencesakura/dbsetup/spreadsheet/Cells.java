@@ -43,14 +43,14 @@ final class Cells {
         return new CellReference(sheet.getSheetName(), r, c, false, false).formatAsString();
     }
 
-    static Object valueForData(Cell cell, FormulaEvaluator evaluator) {
+    static Object value(Cell cell, FormulaEvaluator evaluator) {
         switch (cell.getCellType()) {
         case NUMERIC:
             return DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : cell.getNumericCellValue();
         case STRING:
             return cell.getStringCellValue();
         case FORMULA:
-            return valueForData(evaluator.evaluateInCell(cell), evaluator);
+            return value(evaluator.evaluateInCell(cell), evaluator);
         case BLANK:
             return null;
         case BOOLEAN:
@@ -59,21 +59,6 @@ final class Cells {
             throw new DbSetupRuntimeException("error value contained: " + a1(cell));
         default:
             throw new DbSetupRuntimeException("unsupported type: " + a1(cell));
-        }
-    }
-
-    static String valueForHeader(Cell cell, FormulaEvaluator evaluator) {
-        switch (cell.getCellType()) {
-        case STRING:
-            return cell.getStringCellValue();
-        case FORMULA:
-            return valueForHeader(evaluator.evaluateInCell(cell), evaluator);
-        case BLANK:
-            throw new DbSetupRuntimeException("header cell must not be null: " + a1(cell));
-        case ERROR:
-            throw new DbSetupRuntimeException("error value contained: " + a1(cell));
-        default:
-            throw new DbSetupRuntimeException("header cell must be string type: " + a1(cell));
         }
     }
 }

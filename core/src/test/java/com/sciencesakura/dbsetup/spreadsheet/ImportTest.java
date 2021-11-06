@@ -190,7 +190,7 @@ class ImportTest {
     void import_sheet_that_contains_empty_sheet() {
         Import.Builder ib = excel("contains_empty_sheet.xlsx");
         assertThatThrownBy(ib::build)
-                .hasMessage("header row not found: empty_sheet");
+                .hasMessage("header row not found: empty_sheet[0]");
     }
 
     private static void validateChangesForSingleSheet(Changes changes) {
