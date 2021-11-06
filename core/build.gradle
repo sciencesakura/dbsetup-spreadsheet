@@ -47,7 +47,3 @@ javadoc {
     'http://dbsetup.ninja-squad.com/apidoc/2.1.0/'
   )
 }
-
-clean {
-  delete << javadoc.destinationDir
-}
