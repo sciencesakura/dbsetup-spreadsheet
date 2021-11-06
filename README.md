@@ -15,13 +15,13 @@ A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Micro
 Gradle:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.1'
 
 // optional - Kotlin Extensions
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.1'
 
 // optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:5.0.0'
+testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
 ```
 
 Maven:
@@ -30,7 +30,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <scope>test</scope>
 </dependency>
 
@@ -38,7 +38,7 @@ Maven:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <scope>test</scope>
 </dependency>
 
@@ -46,7 +46,7 @@ Maven:
 <dependency>
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>5.0.0</version>
+  <version>5.1.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -78,18 +78,18 @@ Create An Excel file with one worksheet per table, and name those worksheets the
 `country` sheet:
 
 |id|code|name|
-|--|----|----|
-| 1|GBR |United Kingdom|
-| 2|HKG |Hong Kong|
-| 3|JPN |Japan|
+|---:|---|---|
+|1|GBR|United Kingdom|
+|2|HKG|Hong Kong|
+|3|JPN|Japan|
 
 `customer` sheet:
 
 |id|name|country|
-|--|----|-------|
-| 1|Eriol|1|
-| 2|Sakura|3|
-| 3|Xiaolang|2|
+|---:|---|---:|
+|1|Eriol|1|
+|2|Sakura|3|
+|3|Xiaolang|2|
 
 Put the prepared Excel file on the classpath, and write code like below.
 
