@@ -28,15 +28,19 @@ import com.ninja_squad.dbsetup.Operations;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.operation.Insert;
 import com.ninja_squad.dbsetup.operation.Operation;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.a1;
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.value;
 
 final class OperationBuilder {
 
@@ -83,6 +87,14 @@ final class OperationBuilder {
         }
     }
 
+    private static String a1(Cell cell) {
+        return new CellReference(cell).formatAsString();
+    }
+
+    private static String a1(Sheet sheet, int r, int c) {
+        return new CellReference(sheet.getSheetName(), r, c, false, false).formatAsString();
+    }
+
     private static String[] columns(Row row, int left, int width, FormulaEvaluator evaluator) {
         String[] columns = new String[width];
         for (int i = 0; i < width; i++) {
@@ -100,6 +112,25 @@ final class OperationBuilder {
             columns[i] = (String) value;
         }
         return columns;
+    }
+
+    private static Object value(Cell cell, FormulaEvaluator evaluator) {
+        switch (cell.getCellType()) {
+            case NUMERIC:
+                return DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : cell.getNumericCellValue();
+            case STRING:
+                return cell.getStringCellValue();
+            case FORMULA:
+                return value(evaluator.evaluateInCell(cell), evaluator);
+            case BLANK:
+                return null;
+            case BOOLEAN:
+                return cell.getBooleanCellValue();
+            case ERROR:
+                throw new DbSetupRuntimeException("error value contained: " + a1(cell));
+            default:
+                throw new DbSetupRuntimeException("unsupported type: " + a1(cell));
+        }
     }
 
     private static Object[] values(Row row, int left, int width, FormulaEvaluator evaluator) {
