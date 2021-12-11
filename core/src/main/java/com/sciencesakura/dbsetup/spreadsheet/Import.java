@@ -23,33 +23,19 @@
  */
 package com.sciencesakura.dbsetup.spreadsheet;
 
-import com.ninja_squad.dbsetup.DbSetupRuntimeException;
 import com.ninja_squad.dbsetup.bind.BinderConfiguration;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
-import com.ninja_squad.dbsetup.operation.CompositeOperation;
-import com.ninja_squad.dbsetup.operation.Insert;
 import com.ninja_squad.dbsetup.operation.Operation;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.a1;
-import static com.sciencesakura.dbsetup.spreadsheet.Cells.value;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -162,82 +148,18 @@ public final class Import implements Operation {
         return new Builder(location);
     }
 
-    private static List<Operation> operations(Builder builder) {
-        boolean enableExclude = builder.exclude != null;
-        try (Workbook workbook = WorkbookFactory.create(builder.location.openStream())) {
-            List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
-            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
-                Sheet sheet = workbook.getSheetAt(i);
-                String sheetName = sheet.getSheetName();
-                if (enableExclude && builder.exclude.matcher(sheetName).matches()) continue;
-                int rowIndex = builder.top;
-                Row row = sheet.getRow(rowIndex);
-                if (row == null) {
-                    throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
-                }
-                int width = row.getLastCellNum() - builder.left;
-                if (width <= 0) {
-                    throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
-                }
-                Insert.Builder ib = Insert.into(sheetName)
-                    .columns(columns(row, builder.left, width, evaluator));
-                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
-                if (valueGenerators != null) {
-                    valueGenerators.forEach(ib::withGeneratedValue);
-                }
-                Map<String, ?> defaultValues = builder.defaultValues.get(sheetName);
-                if (defaultValues != null) {
-                    defaultValues.forEach(ib::withDefaultValue);
-                }
-                while ((row = sheet.getRow(++rowIndex)) != null) {
-                    ib.values(values(row, builder.left, width, evaluator));
-                }
-                operations.add(ib.build());
-            }
-            return operations;
-        } catch (IOException e) {
-            throw new DbSetupRuntimeException("failed to open " + builder.location, e);
-        }
-    }
-
-    private static String[] columns(Row row, int left, int width, FormulaEvaluator evaluator) {
-        String[] columns = new String[width];
-        for (int i = 0; i < width; i++) {
-            int c = left + i;
-            Cell cell = row.getCell(c);
-            if (cell == null) {
-                throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
-            }
-            Object value = value(cell, evaluator);
-            if (value == null || "".equals(value)) {
-                throw new DbSetupRuntimeException("header cell must not be blank: " + a1(cell));
-            } else if (!(value instanceof String)) {
-                throw new DbSetupRuntimeException("header cell must be string type: " + a1(cell));
-            }
-            columns[i] = (String) value;
-        }
-        return columns;
-    }
-
-    private static Object[] values(Row row, int left, int width, FormulaEvaluator evaluator) {
-        Object[] values = new Object[width];
-        for (int i = 0; i < width; i++) {
-            Cell cell = row.getCell(left + i);
-            values[i] = cell == null ? null : value(cell, evaluator);
-        }
-        return values;
-    }
-
-    private final Operation internalOperation;
+    private final Builder builder;
+    private Operation internalOperation;
 
     private Import(Builder builder) {
-        internalOperation = CompositeOperation.sequenceOf(operations(builder));
+        this.builder = builder;
     }
 
     @Override
     public void execute(Connection connection, BinderConfiguration configuration) throws SQLException {
+        if (internalOperation == null) {
+            internalOperation = OperationBuilder.build(builder);
+        }
         internalOperation.execute(connection, configuration);
     }
 
@@ -248,17 +170,13 @@ public final class Import implements Operation {
      */
     public static final class Builder {
 
-        private final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
-
-        private final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
-
-        private final URL location;
-
-        private Pattern exclude;
-
-        private int left;
-
-        private int top;
+        final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
+        final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
+        final URL location;
+        Pattern exclude;
+        int left;
+        int top;
+        private boolean built;
 
         private Builder(String location) {
             requireNonNull(location, "location must not be null");
@@ -275,6 +193,10 @@ public final class Import implements Operation {
          */
         @NotNull
         public Import build() {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
+            built = true;
             return new Import(this);
         }
 
@@ -285,6 +207,9 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder exclude(@NotNull String exclude) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             this.exclude = Pattern.compile(requireNonNull(exclude, "exclude must not be null"));
             return this;
         }
@@ -296,6 +221,9 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder exclude(@NotNull Pattern exclude) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             this.exclude = requireNonNull(exclude, "exclude must not be null");
             return this;
         }
@@ -310,6 +238,9 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder left(int left) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             if (left < 0) {
                 throw new IllegalArgumentException("left must be greater than or equal to 0");
             }
@@ -327,6 +258,9 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder top(int top) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             if (top < 0) {
                 throw new IllegalArgumentException("top must be greater than or equal to 0");
             }
@@ -344,6 +278,9 @@ public final class Import implements Operation {
          */
         public Builder withDefaultValue(@NotNull String table, @NotNull String column,
                                         Object value) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
@@ -360,6 +297,9 @@ public final class Import implements Operation {
          */
         public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
                                           @NotNull ValueGenerator<?> valueGenerator) {
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");

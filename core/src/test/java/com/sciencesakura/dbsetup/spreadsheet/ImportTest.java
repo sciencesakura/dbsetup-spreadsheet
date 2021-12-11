@@ -181,15 +181,15 @@ class ImportTest {
 
     @Test
     void import_sheet_that_contains_error() {
-        Import.Builder ib = excel("contains_error.xlsx");
-        assertThatThrownBy(ib::build)
+        Operation operation = excel("contains_error.xlsx").build();
+        assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
                 .hasMessage("error value contained: table_2!B4");
     }
 
     @Test
     void import_sheet_that_contains_empty_sheet() {
-        Import.Builder ib = excel("contains_empty_sheet.xlsx");
-        assertThatThrownBy(ib::build)
+        Operation operation = excel("contains_empty_sheet.xlsx").build();
+        assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
                 .hasMessage("header row not found: empty_sheet[0]");
     }
 
