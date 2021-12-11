@@ -1,6 +1,6 @@
 allprojects {
   group = 'com.sciencesakura'
-  version = '1.0.2-SNAPSHOT'
+  version = '1.0.2'
   description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 
   repositories {
