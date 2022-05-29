@@ -1,14 +1,10 @@
 allprojects {
   group = 'com.sciencesakura'
-  version = '1.0.2'
+  version = '1.0.3-SNAPSHOT'
   description = 'An extension of DbSetup to import data from Microsoft Excel files.'
 
   repositories {
     mavenCentral()
-    maven {
-      // for kotlinx-html-jvm
-      url = 'https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven'
-    }
   }
 }
 

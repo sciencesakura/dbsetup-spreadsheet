@@ -1,15 +1,10 @@
-plugins {
-  id 'com.github.spotbugs' version '4.7.0'
-}
-
 dependencies {
   api 'com.ninja-squad:DbSetup:2.1.0'
-  implementation 'org.apache.poi:poi:5.1.0'
-  compileOnly 'org.jetbrains:annotations:22.0.0'
-
-  testRuntimeOnly 'com.h2database:h2:2.0.202'
-  testRuntimeOnly 'org.apache.logging.log4j:log4j-core:2.14.1'
-  testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
+  implementation 'org.apache.poi:poi:5.2.2'
+  compileOnly 'org.jetbrains:annotations:23.0.0'
+  testRuntimeOnly 'com.h2database:h2:2.1.212'
+  testRuntimeOnly 'org.apache.logging.log4j:log4j-core:2.17.2'
+  testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
   testImplementation 'org.assertj:assertj-db:2.0.2'
   testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 }
@@ -46,11 +41,4 @@ javadoc {
     'https://docs.oracle.com/javase/8/docs/api/',
     'http://dbsetup.ninja-squad.com/apidoc/2.1.0/'
   )
-}
-
-tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
-  reports {
-    xml.enabled = false
-    html.enabled = true
-  }
 }
