@@ -37,13 +37,14 @@ private const val username = "sa"
 private val source = Source(url, username, null)
 private val destination = DriverManagerDestination(url, username, null)
 private val setUpQueries = arrayOf(
-    "drop table if exists table_1 cascade",
     """
-    create table table_1 (
+    create table if not exists table_1 (
       a integer primary key,
-      b integer
+      b integer,
+      c integer
     )
-    """
+    """,
+    "truncate table table_1"
 )
 
 class ExcelTest {
@@ -56,40 +57,44 @@ class ExcelTest {
     }
 
     @Test
-    fun no_configure() {
+    fun import_with_default_settings() {
         val changes = Changes(source).setStartPointNow()
         dbSetup(destination) {
-            excel("no_configure.xlsx")
+            excel("testdata.xlsx")
         }.launch()
-        changes.setEndPointNow()
-        assertThat(changes).hasNumberOfChanges(2)
+        assertThat(changes.setEndPointNow())
+            .hasNumberOfChanges(2)
             .changeOfCreation()
             .rowAtEndPoint()
             .value("a").isEqualTo(10)
             .value("b").isEqualTo(100)
+            .value("c").isNull
             .changeOfCreation()
             .rowAtEndPoint()
             .value("a").isEqualTo(20)
             .value("b").isEqualTo(200)
+            .value("c").isNull
     }
 
     @Test
-    fun configure() {
+    fun import_with_customized_settings() {
         val changes = Changes(source).setStartPointNow()
         dbSetup(destination) {
-            excel("configure.xlsx") {
-                withGeneratedValue("table_1", "a", ValueGenerators.sequence())
+            excel("testdata.xlsx") {
+                withGeneratedValue("table_1", "c", ValueGenerators.sequence())
             }
         }.launch()
-        changes.setEndPointNow()
-        assertThat(changes).hasNumberOfChanges(2)
+        assertThat(changes.setEndPointNow())
+            .hasNumberOfChanges(2)
             .changeOfCreation()
             .rowAtEndPoint()
-            .value("a").isEqualTo(1)
+            .value("a").isEqualTo(10)
             .value("b").isEqualTo(100)
+            .value("c").isEqualTo(1)
             .changeOfCreation()
             .rowAtEndPoint()
-            .value("a").isEqualTo(2)
+            .value("a").isEqualTo(20)
             .value("b").isEqualTo(200)
+            .value("c").isEqualTo(2)
     }
 }
