@@ -23,20 +23,20 @@
  */
 package com.sciencesakura.dbsetup.spreadsheet;
 
+import static java.util.Objects.requireNonNull;
+
 import com.ninja_squad.dbsetup.bind.BinderConfiguration;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.operation.Operation;
-import org.jetbrains.annotations.NotNull;
-
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
-
-import static java.util.Objects.requireNonNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An Operation which imports the Microsoft Excel file into the tables.
@@ -170,12 +170,14 @@ public final class Import implements Operation {
      */
     public static final class Builder {
 
-        final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
-        final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         final URL location;
-        Pattern exclude;
+        Pattern[] include;
+        Pattern[] exclude;
+        Function<String, String> tableMapper = Function.identity();
         int left;
         int top;
+        Map<String, Map<String, Object>> defaultValues;
+        Map<String, Map<String, ValueGenerator<?>>> valueGenerators;
         private boolean built;
 
         private Builder(String location) {
@@ -193,43 +195,89 @@ public final class Import implements Operation {
          */
         @NotNull
         public Import build() {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             built = true;
             return new Import(this);
         }
 
         /**
-         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         * Specify the pattern of the worksheet name to be included from the importing.
          *
-         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @param include the regular expression pattern of the worksheet name to be included
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull String exclude) {
-            if (built) {
-                throw new IllegalStateException("already built");
+        public Builder include(@NotNull String... include) {
+            requireUnbuilt();
+            requireNonNull(include, "include must not be null");
+            this.include = new Pattern[include.length];
+            for (int i = 0; i < include.length; i++) {
+                this.include[i] = Pattern.compile(requireNonNull(include[i], "include must not contain null"));
             }
-            this.exclude = Pattern.compile(requireNonNull(exclude, "exclude must not be null"));
             return this;
         }
 
         /**
-         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         * Specify the pattern of the worksheet name to be included from the importing.
          *
-         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @param include the regular expression pattern of the worksheet name to be included
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull Pattern exclude) {
-            if (built) {
-                throw new IllegalStateException("already built");
+        public Builder include(@NotNull Pattern... include) {
+            requireUnbuilt();
+            requireNonNull(include, "include must not be null");
+            this.include = new Pattern[include.length];
+            for (int i = 0; i < include.length; i++) {
+                this.include[i] = requireNonNull(include[i], "include must not contain null");
             }
-            this.exclude = requireNonNull(exclude, "exclude must not be null");
             return this;
         }
 
         /**
-         * Specifies a start column index of the worksheet to read data.
+         * Specify the pattern of the worksheet name to be excluded from the importing.
+         *
+         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @return the reference to this object
+         */
+        public Builder exclude(@NotNull String... exclude) {
+            requireUnbuilt();
+            requireNonNull(exclude, "exclude must not be null");
+            this.exclude = new Pattern[exclude.length];
+            for (int i = 0; i < exclude.length; i++) {
+                this.exclude[i] = Pattern.compile(requireNonNull(exclude[i], "exclude must not contain null"));
+            }
+            return this;
+        }
+
+        /**
+         * Specify the pattern of the worksheet name to be excluded from the importing.
+         *
+         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @return the reference to this object
+         */
+        public Builder exclude(@NotNull Pattern... exclude) {
+            requireUnbuilt();
+            requireNonNull(exclude, "exclude must not be null");
+            this.exclude = new Pattern[exclude.length];
+            for (int i = 0; i < exclude.length; i++) {
+                this.exclude[i] = requireNonNull(exclude[i], "exclude must not contain null");
+            }
+            return this;
+        }
+
+        /**
+         * Specify the mapper to map the worksheet name to the table name.
+         *
+         * @param tableMapper the mapper to map the worksheet name to the table name
+         * @return the reference to this object
+         */
+        public Builder tableMapper(@NotNull Function<String, String> tableMapper) {
+            requireUnbuilt();
+            this.tableMapper = requireNonNull(tableMapper, "tableMapper must not be null");
+            return this;
+        }
+
+        /**
+         * Specify a start column index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
@@ -238,9 +286,7 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder left(int left) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             if (left < 0) {
                 throw new IllegalArgumentException("left must be greater than or equal to 0");
             }
@@ -249,7 +295,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a start row index of the worksheet to read data.
+         * Specify the start row index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
@@ -258,14 +304,26 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder top(int top) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             if (top < 0) {
                 throw new IllegalArgumentException("top must be greater than or equal to 0");
             }
             this.top = top;
             return this;
+        }
+
+        /**
+         * Specify the start column index and row index of the worksheet to read data.
+         * <p>
+         * By default <code>(0, 0)</code> is used.
+         * </p>
+         *
+         * @param left the 0-based column index, must be non-negative
+         * @param top  the 0-based row index, must be non-negative
+         * @return the reference to this object
+         */
+        public Builder margin(int left, int top) {
+            return left(left).top(top);
         }
 
         /**
@@ -278,11 +336,12 @@ public final class Import implements Operation {
          */
         public Builder withDefaultValue(@NotNull String table, @NotNull String column,
                                         Object value) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
+            if (defaultValues == null) {
+                defaultValues = new HashMap<>();
+            }
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
             return this;
         }
@@ -297,14 +356,19 @@ public final class Import implements Operation {
          */
         public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
                                           @NotNull ValueGenerator<?> valueGenerator) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");
+            if (valueGenerators == null) {
+                valueGenerators = new HashMap<>();
+            }
             valueGenerators.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, valueGenerator);
             return this;
+        }
+
+        private void requireUnbuilt() {
+            if (built) throw new IllegalStateException("already built");
         }
     }
 }
