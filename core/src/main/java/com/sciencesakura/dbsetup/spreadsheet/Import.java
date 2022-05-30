@@ -23,21 +23,20 @@
  */
 package com.sciencesakura.dbsetup.spreadsheet;
 
+import static java.util.Objects.requireNonNull;
+
 import com.ninja_squad.dbsetup.bind.BinderConfiguration;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.operation.Operation;
-import java.util.function.Function;
-import org.jetbrains.annotations.NotNull;
-
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
-
-import static java.util.Objects.requireNonNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An Operation which imports the Microsoft Excel file into the tables.
@@ -171,13 +170,13 @@ public final class Import implements Operation {
      */
     public static final class Builder {
 
-        final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
-        final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         final URL location;
-        Pattern exclude;
+        Pattern[] exclude;
         Function<String, String> tableMapper = Function.identity();
         int left;
         int top;
+        Map<String, Map<String, Object>> defaultValues;
+        Map<String, Map<String, ValueGenerator<?>>> valueGenerators;
         private boolean built;
 
         private Builder(String location) {
@@ -201,33 +200,41 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         * Specify the pattern of the worksheet name to be excluded from the importing.
          *
          * @param exclude the regular expression pattern of the worksheet name to be excluded
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull String exclude) {
+        public Builder exclude(@NotNull String... exclude) {
             requireUnbuilt();
-            this.exclude = Pattern.compile(requireNonNull(exclude, "exclude must not be null"));
+            requireNonNull(exclude, "exclude must not be null");
+            this.exclude = new Pattern[exclude.length];
+            for (int i = 0; i < exclude.length; i++) {
+                this.exclude[i] = Pattern.compile(requireNonNull(exclude[i], "exclude must not contain null"));
+            }
             return this;
         }
 
         /**
-         * Specifies a pattern of the worksheet name to be excluded from the importing.
+         * Specify the pattern of the worksheet name to be excluded from the importing.
          *
          * @param exclude the regular expression pattern of the worksheet name to be excluded
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull Pattern exclude) {
+        public Builder exclude(@NotNull Pattern... exclude) {
             requireUnbuilt();
-            this.exclude = requireNonNull(exclude, "exclude must not be null");
+            requireNonNull(exclude, "exclude must not be null");
+            this.exclude = new Pattern[exclude.length];
+            for (int i = 0; i < exclude.length; i++) {
+                this.exclude[i] = requireNonNull(exclude[i], "exclude must not contain null");
+            }
             return this;
         }
 
         /**
-         * Specify the mapper to map the sheet name to the table name.
+         * Specify the mapper to map the worksheet name to the table name.
          *
-         * @param tableMapper the mapper to map the sheet name to the table name
+         * @param tableMapper the mapper to map the worksheet name to the table name
          * @return the reference to this object
          */
         public Builder tableMapper(@NotNull Function<String, String> tableMapper) {
@@ -285,6 +292,9 @@ public final class Import implements Operation {
             requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
+            if (defaultValues == null) {
+                defaultValues = new HashMap<>();
+            }
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
             return this;
         }
@@ -303,6 +313,9 @@ public final class Import implements Operation {
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");
+            if (valueGenerators == null) {
+                valueGenerators = new HashMap<>();
+            }
             valueGenerators.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, valueGenerator);
             return this;
         }

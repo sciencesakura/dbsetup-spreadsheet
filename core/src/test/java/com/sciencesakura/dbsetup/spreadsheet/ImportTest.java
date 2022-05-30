@@ -128,8 +128,8 @@ class ImportTest {
     void import_workbook_with_dv_and_gv() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2-margin")
-            .tableMapper(sheet -> sheet.replaceFirst("-.*$", ""))
+            .exclude("table_2_margin", "table_2_error", "table_2_empty")
+            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
             .withDefaultValue("table_1", "dv", 10)
             .withDefaultValue("table_2", "dv", "X")
             .withGeneratedValue("table_1", "gv", ValueGenerators.sequence())
@@ -182,8 +182,8 @@ class ImportTest {
     void import_workbook_that_has_margin() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_1|table_2-formula")
-            .tableMapper(sheet -> sheet.replaceFirst("-.*$", ""))
+            .exclude("table_1", "table_2_formula", "table_2_error", "table_2_empty")
+            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
             .top(2)
             .left(1)
             .build();
@@ -201,18 +201,24 @@ class ImportTest {
     }
 
     @Test
-    void import_sheet_that_contains_error() {
-        Operation operation = excel("contains_error.xlsx").build();
+    void import_workbook_that_contains_error() {
+        Operation operation = excel("testdata_2.xlsx")
+            .exclude("table_2_margin", "table_2_empty")
+            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
+            .build();
         assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
-                .hasMessage("error value contained: table_2!B4");
+                .hasMessage("error value contained: table_2_error!B2");
         dbSetupTracker.skipNextLaunch();
     }
 
     @Test
-    void import_sheet_that_contains_empty_sheet() {
-        Operation operation = excel("contains_empty_sheet.xlsx").build();
+    void import_workbook_that_contains_empty_sheet() {
+        Operation operation = excel("testdata_2.xlsx")
+            .exclude("table_2_margin", "table_2_error")
+            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
+            .build();
         assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
-                .hasMessage("header row not found: empty_sheet[0]");
+                .hasMessage("header row not found: table_2_empty[0]");
         dbSetupTracker.skipNextLaunch();
     }
 
@@ -233,18 +239,30 @@ class ImportTest {
 
         @Test
         void string_exclude_is_null() {
-            String exclude = null;
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude(exclude))
+                .exclude((String[]) null))
                 .hasMessage("exclude must not be null");
         }
 
         @Test
-        void pattern_exclude_is_null() {
-            Pattern exclude = null;
+        void string_exclude_contains_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude(exclude))
+                .exclude((String) null))
+                .hasMessage("exclude must not contain null");
+        }
+
+        @Test
+        void pattern_exclude_is_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .exclude((Pattern[]) null))
                 .hasMessage("exclude must not be null");
+        }
+
+        @Test
+        void pattern_exclude_contains_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .exclude((Pattern) null))
+                .hasMessage("exclude must not contain null");
         }
 
         @Test

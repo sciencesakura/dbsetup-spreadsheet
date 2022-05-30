@@ -28,6 +28,11 @@ import com.ninja_squad.dbsetup.Operations;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.operation.Insert;
 import com.ninja_squad.dbsetup.operation.Operation;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -37,18 +42,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellReference;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 final class OperationBuilder {
 
     private OperationBuilder() {
     }
 
     static Operation build(Import.Builder builder) {
-        boolean enableExclude = builder.exclude != null;
         try (Workbook workbook = WorkbookFactory.create(builder.location.openStream())) {
             List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
@@ -56,7 +55,7 @@ final class OperationBuilder {
                 if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
                 Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                if (enableExclude && builder.exclude.matcher(sheetName).matches()) continue;
+                if (isExcluded(builder.exclude, sheetName)) continue;
                 int rowIndex = builder.top;
                 Row row = sheet.getRow(rowIndex);
                 if (row == null) {
@@ -69,14 +68,8 @@ final class OperationBuilder {
                 String tableName = builder.tableMapper.apply(sheetName);
                 Insert.Builder ib = Insert.into(tableName)
                         .columns(columns(row, builder.left, width, evaluator));
-                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(tableName);
-                if (valueGenerators != null) {
-                    valueGenerators.forEach(ib::withGeneratedValue);
-                }
-                Map<String, ?> defaultValues = builder.defaultValues.get(tableName);
-                if (defaultValues != null) {
-                    defaultValues.forEach(ib::withDefaultValue);
-                }
+                setDefaultValues(ib, builder.defaultValues, tableName);
+                setValueGenerators(ib, builder.valueGenerators, tableName);
                 while ((row = sheet.getRow(++rowIndex)) != null) {
                     ib.values(values(row, builder.left, width, evaluator));
                 }
@@ -86,6 +79,32 @@ final class OperationBuilder {
         } catch (IOException e) {
             throw new DbSetupRuntimeException("failed to open " + builder.location, e);
         }
+    }
+
+    private static boolean isExcluded(Pattern[] exclude, String sheetName) {
+        if (exclude == null) return false;
+        for (Pattern ex : exclude) {
+            if (ex.matcher(sheetName).matches()) return true;
+        }
+        return false;
+    }
+
+    private static void setDefaultValues(Insert.Builder ib,
+                                         Map<String, Map<String, Object>> defaultValues,
+                                         String tableName) {
+        if (defaultValues == null) return;
+        Map<String, ?> dv = defaultValues.get(tableName);
+        if (dv == null) return;
+        dv.forEach(ib::withDefaultValue);
+    }
+
+    private static void setValueGenerators(Insert.Builder ib,
+                                           Map<String, Map<String, ValueGenerator<?>>> valueGenerators,
+                                           String tableName) {
+        if (valueGenerators == null) return;
+        Map<String, ValueGenerator<?>> vg = valueGenerators.get(tableName);
+        if (vg == null) return;
+        vg.forEach(ib::withGeneratedValue);
     }
 
     private static String a1(Cell cell) {
