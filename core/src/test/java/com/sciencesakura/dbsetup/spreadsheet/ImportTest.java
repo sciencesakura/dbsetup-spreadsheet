@@ -78,7 +78,7 @@ class ImportTest {
     }
 
     @Test
-    void import_with_default_settings() {
+    void import_workbook_with_default_settings() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("testdata_1.xlsx").build();
         new DbSetup(destination, operation).launch();
@@ -125,10 +125,11 @@ class ImportTest {
     }
 
     @Test
-    void import_with_dv_and_gv() {
+    void import_workbook_with_dv_and_gv() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("not_data")
+            .exclude("table_2-margin")
+            .tableMapper(sheet -> sheet.replaceFirst("-.*$", ""))
             .withDefaultValue("table_1", "dv", 10)
             .withDefaultValue("table_2", "dv", "X")
             .withGeneratedValue("table_1", "gv", ValueGenerators.sequence())
@@ -178,41 +179,25 @@ class ImportTest {
     }
 
     @Test
-    void import_sheet_that_has_margin() {
+    void import_workbook_that_has_margin() {
         Changes changes = new Changes(source).setStartPointNow();
-        Operation operation = excel("has_margin.xlsx")
-                .top(2)
-                .left(1)
-                .build();
+        Operation operation = excel("testdata_2.xlsx")
+            .exclude("table_1|table_2-formula")
+            .tableMapper(sheet -> sheet.replaceFirst("-.*$", ""))
+            .top(2)
+            .left(1)
+            .build();
         new DbSetup(destination, operation).launch();
         assertThat(changes.setEndPointNow())
             .hasNumberOfChanges(2)
-            .changeOnTableWithPks("table_1", 100)
+            .changeOnTableWithPks("table_2", 1)
             .isCreation()
             .rowAtEndPoint()
-            .value("b").isEqualTo(10000000000L)
-            .value("c").isEqualTo(0.5)
-            .value("d").isEqualTo("2019-01-01")
-            .value("e").isEqualTo("20:30:01")
-            .value("f").isEqualTo("2019-02-01T12:34:56")
-            .value("g").isEqualTo("甲")
-            .value("h").isTrue()
-            .value("i").isNull()
-            .value("dv").isNull()
-            .value("gv").isNull()
-            .changeOnTableWithPks("table_1", 200)
+            .value("b").isEqualTo("b1")
+            .changeOnTableWithPks("table_2", 2)
             .isCreation()
             .rowAtEndPoint()
-            .value("a").isEqualTo(200)
-            .value("c").isEqualTo(0.25)
-            .value("d").isEqualTo("2019-01-02")
-            .value("e").isEqualTo("20:30:02")
-            .value("f").isEqualTo("2019-02-02T12:34:56")
-            .value("g").isEqualTo("乙")
-            .value("h").isFalse()
-            .value("i").isNull()
-            .value("dv").isNull()
-            .value("gv").isNull();
+            .value("b").isEqualTo("b2");
     }
 
     @Test

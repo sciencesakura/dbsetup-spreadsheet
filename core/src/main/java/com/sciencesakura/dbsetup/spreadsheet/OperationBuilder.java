@@ -66,13 +66,14 @@ final class OperationBuilder {
                 if (width <= 0) {
                     throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
                 }
-                Insert.Builder ib = Insert.into(sheetName)
+                String tableName = builder.tableMapper.apply(sheetName);
+                Insert.Builder ib = Insert.into(tableName)
                         .columns(columns(row, builder.left, width, evaluator));
-                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(sheetName);
+                Map<String, ValueGenerator<?>> valueGenerators = builder.valueGenerators.get(tableName);
                 if (valueGenerators != null) {
                     valueGenerators.forEach(ib::withGeneratedValue);
                 }
-                Map<String, ?> defaultValues = builder.defaultValues.get(sheetName);
+                Map<String, ?> defaultValues = builder.defaultValues.get(tableName);
                 if (defaultValues != null) {
                     defaultValues.forEach(ib::withDefaultValue);
                 }

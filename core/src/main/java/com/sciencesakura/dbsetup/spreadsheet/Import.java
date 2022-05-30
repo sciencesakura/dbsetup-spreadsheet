@@ -26,6 +26,7 @@ package com.sciencesakura.dbsetup.spreadsheet;
 import com.ninja_squad.dbsetup.bind.BinderConfiguration;
 import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.operation.Operation;
+import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
@@ -174,6 +175,7 @@ public final class Import implements Operation {
         final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         final URL location;
         Pattern exclude;
+        Function<String, String> tableMapper = Function.identity();
         int left;
         int top;
         private boolean built;
@@ -193,9 +195,7 @@ public final class Import implements Operation {
          */
         @NotNull
         public Import build() {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             built = true;
             return new Import(this);
         }
@@ -207,9 +207,7 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder exclude(@NotNull String exclude) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             this.exclude = Pattern.compile(requireNonNull(exclude, "exclude must not be null"));
             return this;
         }
@@ -221,10 +219,20 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder exclude(@NotNull Pattern exclude) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             this.exclude = requireNonNull(exclude, "exclude must not be null");
+            return this;
+        }
+
+        /**
+         * Specify the mapper to map the sheet name to the table name.
+         *
+         * @param tableMapper the mapper to map the sheet name to the table name
+         * @return the reference to this object
+         */
+        public Builder tableMapper(@NotNull Function<String, String> tableMapper) {
+            requireUnbuilt();
+            this.tableMapper = requireNonNull(tableMapper, "tableMapper must not be null");
             return this;
         }
 
@@ -238,9 +246,7 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder left(int left) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             if (left < 0) {
                 throw new IllegalArgumentException("left must be greater than or equal to 0");
             }
@@ -258,9 +264,7 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder top(int top) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             if (top < 0) {
                 throw new IllegalArgumentException("top must be greater than or equal to 0");
             }
@@ -278,9 +282,7 @@ public final class Import implements Operation {
          */
         public Builder withDefaultValue(@NotNull String table, @NotNull String column,
                                         Object value) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
@@ -297,14 +299,16 @@ public final class Import implements Operation {
          */
         public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
                                           @NotNull ValueGenerator<?> valueGenerator) {
-            if (built) {
-                throw new IllegalStateException("already built");
-            }
+            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");
             valueGenerators.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, valueGenerator);
             return this;
+        }
+
+        private void requireUnbuilt() {
+            if (built) throw new IllegalStateException("already built");
         }
     }
 }
