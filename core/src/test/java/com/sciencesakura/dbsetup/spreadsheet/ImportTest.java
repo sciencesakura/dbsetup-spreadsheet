@@ -182,7 +182,8 @@ class ImportTest {
     void import_workbook_that_has_margin() {
         Changes changes = new Changes(source).setStartPointNow();
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_1", "table_2_formula", "table_2_error", "table_2_empty")
+            .include("table_2.+")
+            .exclude("table_2_(formula|error|empty)")
             .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
             .top(2)
             .left(1)
@@ -203,7 +204,7 @@ class ImportTest {
     @Test
     void import_workbook_that_contains_error() {
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2_margin", "table_2_empty")
+            .exclude("table_2_(margin|empty)")
             .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
             .build();
         assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
@@ -214,7 +215,7 @@ class ImportTest {
     @Test
     void import_workbook_that_contains_empty_sheet() {
         Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2_margin", "table_2_error")
+            .exclude("table_2_(margin|error)")
             .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
             .build();
         assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
@@ -235,6 +236,34 @@ class ImportTest {
             String location = null;
             assertThatThrownBy(() -> excel(location))
                     .hasMessage("location must not be null");
+        }
+
+        @Test
+        void string_include_is_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .include((String[]) null))
+                .hasMessage("include must not be null");
+        }
+
+        @Test
+        void string_include_contains_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .include((String) null))
+                .hasMessage("include must not contain null");
+        }
+
+        @Test
+        void pattern_include_is_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .include((Pattern[]) null))
+                .hasMessage("include must not be null");
+        }
+
+        @Test
+        void pattern_include_contains_null() {
+            assertThatThrownBy(() -> excel("testdata_1.xlsx")
+                .include((Pattern) null))
+                .hasMessage("include must not contain null");
         }
 
         @Test

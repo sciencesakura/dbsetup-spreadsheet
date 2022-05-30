@@ -55,7 +55,7 @@ final class OperationBuilder {
                 if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
                 Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                if (isExcluded(builder.exclude, sheetName)) continue;
+                if (isExcluded(builder.include, builder.exclude, sheetName)) continue;
                 int rowIndex = builder.top;
                 Row row = sheet.getRow(rowIndex);
                 if (row == null) {
@@ -81,7 +81,17 @@ final class OperationBuilder {
         }
     }
 
-    private static boolean isExcluded(Pattern[] exclude, String sheetName) {
+    private static boolean isExcluded(Pattern[] include, Pattern[] exclude, String sheetName) {
+        boolean included = include == null || include.length == 0;
+        if (!included) {
+            for (Pattern in : include) {
+                if (in.matcher(sheetName).matches()) {
+                    included = true;
+                    break;
+                }
+            }
+            if (!included) return true;
+        }
         if (exclude == null) return false;
         for (Pattern ex : exclude) {
             if (ex.matcher(sheetName).matches()) return true;

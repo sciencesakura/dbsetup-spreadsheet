@@ -171,6 +171,7 @@ public final class Import implements Operation {
     public static final class Builder {
 
         final URL location;
+        Pattern[] include;
         Pattern[] exclude;
         Function<String, String> tableMapper = Function.identity();
         int left;
@@ -197,6 +198,38 @@ public final class Import implements Operation {
             requireUnbuilt();
             built = true;
             return new Import(this);
+        }
+
+        /**
+         * Specify the pattern of the worksheet name to be included from the importing.
+         *
+         * @param include the regular expression pattern of the worksheet name to be included
+         * @return the reference to this object
+         */
+        public Builder include(@NotNull String... include) {
+            requireUnbuilt();
+            requireNonNull(include, "include must not be null");
+            this.include = new Pattern[include.length];
+            for (int i = 0; i < include.length; i++) {
+                this.include[i] = Pattern.compile(requireNonNull(include[i], "include must not contain null"));
+            }
+            return this;
+        }
+
+        /**
+         * Specify the pattern of the worksheet name to be included from the importing.
+         *
+         * @param include the regular expression pattern of the worksheet name to be included
+         * @return the reference to this object
+         */
+        public Builder include(@NotNull Pattern... include) {
+            requireUnbuilt();
+            requireNonNull(include, "include must not be null");
+            this.include = new Pattern[include.length];
+            for (int i = 0; i < include.length; i++) {
+                this.include[i] = requireNonNull(include[i], "include must not contain null");
+            }
+            return this;
         }
 
         /**
