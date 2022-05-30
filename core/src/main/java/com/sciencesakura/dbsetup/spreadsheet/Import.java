@@ -277,7 +277,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a start column index of the worksheet to read data.
+         * Specify a start column index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
@@ -295,7 +295,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a start row index of the worksheet to read data.
+         * Specify the start row index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
@@ -310,6 +310,20 @@ public final class Import implements Operation {
             }
             this.top = top;
             return this;
+        }
+
+        /**
+         * Specify the start column index and row index of the worksheet to read data.
+         * <p>
+         * By default <code>(0, 0)</code> is used.
+         * </p>
+         *
+         * @param left the 0-based column index, must be non-negative
+         * @param top  the 0-based row index, must be non-negative
+         * @return the reference to this object
+         */
+        public Builder margin(int left, int top) {
+            return left(left).top(top);
         }
 
         /**

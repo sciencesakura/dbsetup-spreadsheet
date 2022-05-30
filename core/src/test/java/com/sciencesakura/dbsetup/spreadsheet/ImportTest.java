@@ -185,8 +185,7 @@ class ImportTest {
             .include("table_2.+")
             .exclude("table_2_(formula|error|empty)")
             .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
-            .top(2)
-            .left(1)
+            .margin(1, 2)
             .build();
         new DbSetup(destination, operation).launch();
         assertThat(changes.setEndPointNow())
