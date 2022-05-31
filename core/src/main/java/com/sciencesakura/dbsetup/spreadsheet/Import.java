@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -143,7 +144,6 @@ public final class Import implements Operation {
      * @return the new {@code Import.Builder} instance
      * @throws IllegalArgumentException if the source file was not found
      */
-    @NotNull
     public static Builder excel(@NotNull String location) {
         return new Builder(location);
     }
@@ -193,7 +193,6 @@ public final class Import implements Operation {
          *
          * @return the new {@code Import} instance
          */
-        @NotNull
         public Import build() {
             requireUnbuilt();
             built = true;
@@ -203,15 +202,15 @@ public final class Import implements Operation {
         /**
          * Specify the pattern of the worksheet name to be included from the importing.
          *
-         * @param include the regular expression pattern of the worksheet name to be included
+         * @param regex the regular expression pattern of the worksheet name to be included
          * @return the reference to this object
          */
-        public Builder include(@NotNull String... include) {
+        public Builder include(@NotNull @RegExp String... regex) {
             requireUnbuilt();
-            requireNonNull(include, "include must not be null");
-            this.include = new Pattern[include.length];
-            for (int i = 0; i < include.length; i++) {
-                this.include[i] = Pattern.compile(requireNonNull(include[i], "include must not contain null"));
+            requireNonNull(regex, "regex must not be null");
+            this.include = new Pattern[regex.length];
+            for (int i = 0; i < regex.length; i++) {
+                this.include[i] = Pattern.compile(requireNonNull(regex[i], "regex must not contain null"));
             }
             return this;
         }
@@ -219,15 +218,15 @@ public final class Import implements Operation {
         /**
          * Specify the pattern of the worksheet name to be included from the importing.
          *
-         * @param include the regular expression pattern of the worksheet name to be included
+         * @param patterns the regular expression pattern of the worksheet name to be included
          * @return the reference to this object
          */
-        public Builder include(@NotNull Pattern... include) {
+        public Builder include(@NotNull Pattern... patterns) {
             requireUnbuilt();
-            requireNonNull(include, "include must not be null");
-            this.include = new Pattern[include.length];
-            for (int i = 0; i < include.length; i++) {
-                this.include[i] = requireNonNull(include[i], "include must not contain null");
+            requireNonNull(patterns, "patterns must not be null");
+            this.include = new Pattern[patterns.length];
+            for (int i = 0; i < patterns.length; i++) {
+                this.include[i] = requireNonNull(patterns[i], "patterns must not contain null");
             }
             return this;
         }
@@ -235,15 +234,15 @@ public final class Import implements Operation {
         /**
          * Specify the pattern of the worksheet name to be excluded from the importing.
          *
-         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @param regex the regular expression pattern of the worksheet name to be excluded
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull String... exclude) {
+        public Builder exclude(@NotNull @RegExp String... regex) {
             requireUnbuilt();
-            requireNonNull(exclude, "exclude must not be null");
-            this.exclude = new Pattern[exclude.length];
-            for (int i = 0; i < exclude.length; i++) {
-                this.exclude[i] = Pattern.compile(requireNonNull(exclude[i], "exclude must not contain null"));
+            requireNonNull(regex, "regex must not be null");
+            this.exclude = new Pattern[regex.length];
+            for (int i = 0; i < regex.length; i++) {
+                this.exclude[i] = Pattern.compile(requireNonNull(regex[i], "regex must not contain null"));
             }
             return this;
         }
@@ -251,15 +250,15 @@ public final class Import implements Operation {
         /**
          * Specify the pattern of the worksheet name to be excluded from the importing.
          *
-         * @param exclude the regular expression pattern of the worksheet name to be excluded
+         * @param patterns the regular expression pattern of the worksheet name to be excluded
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull Pattern... exclude) {
+        public Builder exclude(@NotNull Pattern... patterns) {
             requireUnbuilt();
-            requireNonNull(exclude, "exclude must not be null");
-            this.exclude = new Pattern[exclude.length];
-            for (int i = 0; i < exclude.length; i++) {
-                this.exclude[i] = requireNonNull(exclude[i], "exclude must not contain null");
+            requireNonNull(patterns, "patterns must not be null");
+            this.exclude = new Pattern[patterns.length];
+            for (int i = 0; i < patterns.length; i++) {
+                this.exclude[i] = requireNonNull(patterns[i], "patterns must not contain null");
             }
             return this;
         }
@@ -277,7 +276,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specify a start column index of the worksheet to read data.
+         * Specify the start column index of the worksheet to read data.
          * <p>
          * By default 0 is used.
          * </p>
@@ -327,7 +326,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a default value for the given pair of table and column.
+         * Specify the default value for the given pair of table and column.
          *
          * @param table  the table name
          * @param column the column name
@@ -347,7 +346,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specifies a value generator for the given pair of table and column.
+         * Specify the value generator for the given pair of table and column.
          *
          * @param table          the table name
          * @param column         the column name
