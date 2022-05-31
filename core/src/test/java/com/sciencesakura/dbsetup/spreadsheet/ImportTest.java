@@ -241,56 +241,56 @@ class ImportTest {
         void string_include_is_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .include((String[]) null))
-                .hasMessage("include must not be null");
+                .hasMessage("regex must not be null");
         }
 
         @Test
         void string_include_contains_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .include((String) null))
-                .hasMessage("include must not contain null");
+                .hasMessage("regex must not contain null");
         }
 
         @Test
         void pattern_include_is_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .include((Pattern[]) null))
-                .hasMessage("include must not be null");
+                .hasMessage("patterns must not be null");
         }
 
         @Test
         void pattern_include_contains_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .include((Pattern) null))
-                .hasMessage("include must not contain null");
+                .hasMessage("patterns must not contain null");
         }
 
         @Test
         void string_exclude_is_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .exclude((String[]) null))
-                .hasMessage("exclude must not be null");
+                .hasMessage("regex must not be null");
         }
 
         @Test
         void string_exclude_contains_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .exclude((String) null))
-                .hasMessage("exclude must not contain null");
+                .hasMessage("regex must not contain null");
         }
 
         @Test
         void pattern_exclude_is_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .exclude((Pattern[]) null))
-                .hasMessage("exclude must not be null");
+                .hasMessage("patterns must not be null");
         }
 
         @Test
         void pattern_exclude_contains_null() {
             assertThatThrownBy(() -> excel("testdata_1.xlsx")
                 .exclude((Pattern) null))
-                .hasMessage("exclude must not contain null");
+                .hasMessage("patterns must not contain null");
         }
 
         @Test
