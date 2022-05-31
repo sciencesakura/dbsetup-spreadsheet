@@ -17,19 +17,19 @@ A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Micro
 #### Java
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.2'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.3'
 
 // optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
+testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
 ```
 
 #### Kotlin
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.2'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.3'
 
 // optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
+testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
 ```
 
 ### Maven
@@ -40,7 +40,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <scope>test</scope>
 </dependency>
 
@@ -48,7 +48,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
 <dependency>
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>5.1.0</version>
+  <version>5.2.2</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -59,7 +59,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <scope>test</scope>
 </dependency>
 
@@ -67,7 +67,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.1.0'
 <dependency>
   <groupId>org.apache.poi</groupId>
   <artifactId>poi-ooxml</artifactId>
-  <version>5.1.0</version>
+  <version>5.2.2</version>
   <scope>test</scope>
 </dependency>
 ```
