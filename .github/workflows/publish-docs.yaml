@@ -1,0 +1,23 @@
+name: publish docs
+on: workflow_dispatch
+jobs:
+  publish-api-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 11
+          cache: maven
+      - run: rm -rf ./docs/apidocs ./docs/dokka
+      - name: Generate Javadoc
+        run: ./mvnw -e --batch-mode -pl core javadoc:javadoc -Dcheckstyle.skip=true -Djacoco.skip=true
+      - name: Generate Dokka
+        run: ./mvnw -e --batch-mode -pl kotlin dokka:dokka -Dktlint.skip=true -Djacoco.skip=true
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          folder: docs
+          clean: true
