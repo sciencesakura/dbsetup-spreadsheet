@@ -44,7 +44,7 @@ private val setUpQueries = arrayOf(
       c integer
     )
     """,
-    "truncate table table_1"
+    "truncate table table_1",
 )
 
 class ExcelTest {
