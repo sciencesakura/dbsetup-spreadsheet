@@ -1,0 +1,7 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.sciencesakura.dbsetup.spreadsheet////PointingToDeclaration/dbsetup-spreadsheet-kt/com.sciencesakura.dbsetup.spreadsheet/index.html
+$dokka.location:com.sciencesakura.dbsetup.spreadsheet//excel/com.ninja_squad.dbsetup_kotlin.DbSetupBuilder#kotlin.String#kotlin.Function1[com.sciencesakura.dbsetup.spreadsheet.Import.Builder,kotlin.Unit]/PointingToDeclaration/dbsetup-spreadsheet-kt/com.sciencesakura.dbsetup.spreadsheet/excel.html
+$dokka.location:com.sciencesakura.dbsetup.spreadsheet//excel/com.ninja_squad.dbsetup_kotlin.DbSetupBuilder#kotlin.String/PointingToDeclaration/dbsetup-spreadsheet-kt/com.sciencesakura.dbsetup.spreadsheet/excel.html
+com.sciencesakura.dbsetup.spreadsheet
+
