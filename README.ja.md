@@ -4,7 +4,7 @@
 
 Microsoft Excelファイルからデータ取り込みができる[DbSetup](http://dbsetup.ninja-squad.com/)拡張機能です.
 
-![](https://github.com/sciencesakura/dbsetup-spreadsheet/workflows/build/badge.svg) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet)
+![](https://github.com/sciencesakura/dbsetup-spreadsheet/actions/workflows/check.yaml/badge.svg) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet)
 
 ## Requirements
 
