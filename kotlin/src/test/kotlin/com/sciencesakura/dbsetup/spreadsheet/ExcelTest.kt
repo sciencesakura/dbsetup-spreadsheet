@@ -24,7 +24,6 @@
 package com.sciencesakura.dbsetup.spreadsheet
 
 import com.ninja_squad.dbsetup.destination.DriverManagerDestination
-import com.ninja_squad.dbsetup.generator.ValueGenerators
 import com.ninja_squad.dbsetup_kotlin.dbSetup
 import org.assertj.db.api.Assertions.assertThat
 import org.assertj.db.type.Changes
@@ -32,69 +31,57 @@ import org.assertj.db.type.Source
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-private const val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
-private const val username = "sa"
-private val source = Source(url, username, null)
-private val destination = DriverManagerDestination(url, username, null)
-private val setUpQueries = arrayOf(
-    """
-    create table if not exists table_1 (
-      a integer primary key,
-      b integer,
-      c integer
-    )
-    """,
-    "truncate table table_1",
-)
-
 class ExcelTest {
+
+    val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+
+    val username = "sa"
+
+    val source = Source(url, username, null)
+
+    val destination = DriverManagerDestination.with(url, username, null)
 
     @BeforeEach
     fun setUp() {
+        val table_11 = """
+            create table if not exists table_11 (
+              id integer primary key,
+              name varchar(100)
+            )
+        """.trimIndent()
+        val table_12 = """
+            create table if not exists table_12 (
+              id integer primary key,
+              name varchar(100)
+            )
+        """.trimIndent()
         dbSetup(destination) {
-            sql(*setUpQueries)
+            sql(table_11, table_12)
+            truncate("table_11", "table_12")
         }.launch()
     }
 
     @Test
-    fun import_with_default_settings() {
+    fun import_excel() {
         val changes = Changes(source).setStartPointNow()
         dbSetup(destination) {
-            excel("testdata.xlsx")
+            excel("kt_test.xlsx")
         }.launch()
-        assertThat(changes.setEndPointNow())
-            .hasNumberOfChanges(2)
-            .changeOfCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(10)
-            .value("b").isEqualTo(100)
-            .value("c").isNull
-            .changeOfCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(20)
-            .value("b").isEqualTo(200)
-            .value("c").isNull
+        assertThat(changes.setEndPointNow()).hasNumberOfChanges(2).changeOfCreationOnTable("table_11")
+            .rowAtEndPoint().value("id").isEqualTo(1).value("name").isEqualTo("Alice")
+            .changeOfCreationOnTable("table_12").rowAtEndPoint().value("id").isEqualTo(2).value("name")
+            .isEqualTo("Bob")
     }
 
     @Test
-    fun import_with_customized_settings() {
+    fun import_excel_with_configure() {
         val changes = Changes(source).setStartPointNow()
         dbSetup(destination) {
-            excel("testdata.xlsx") {
-                withGeneratedValue("table_1", "c", ValueGenerators.sequence())
+            excel("kt_test.xlsx") {
+                exclude("table_12")
             }
         }.launch()
-        assertThat(changes.setEndPointNow())
-            .hasNumberOfChanges(2)
-            .changeOfCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(10)
-            .value("b").isEqualTo(100)
-            .value("c").isEqualTo(1)
-            .changeOfCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(20)
-            .value("b").isEqualTo(200)
-            .value("c").isEqualTo(2)
+        assertThat(changes.setEndPointNow()).hasNumberOfChanges(1).changeOfCreationOnTable("table_11")
+            .rowAtEndPoint().value("id").isEqualTo(1).value("name").isEqualTo("Alice")
     }
 }

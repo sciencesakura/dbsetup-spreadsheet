@@ -21,340 +21,702 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.sciencesakura.dbsetup.spreadsheet;
 
+import static com.ninja_squad.dbsetup.Operations.sequenceOf;
 import static com.ninja_squad.dbsetup.Operations.sql;
+import static com.ninja_squad.dbsetup.Operations.truncate;
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.db.api.Assertions.assertThat;
 
 import com.ninja_squad.dbsetup.DbSetup;
-import com.ninja_squad.dbsetup.DbSetupTracker;
 import com.ninja_squad.dbsetup.destination.Destination;
 import com.ninja_squad.dbsetup.destination.DriverManagerDestination;
-import com.ninja_squad.dbsetup.generator.ValueGenerator;
 import com.ninja_squad.dbsetup.generator.ValueGenerators;
-import com.ninja_squad.dbsetup.operation.Operation;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import org.assertj.db.type.Changes;
 import org.assertj.db.type.Source;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class ImportTest {
 
-    private static final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-    private static final String username = "sa";
-    private static final Source source = new Source(url, username, null);
-    private static final Destination destination = new DriverManagerDestination(url, username, null);
-    private static final DbSetupTracker dbSetupTracker = new DbSetupTracker();
-    private static final Operation setUpQueries = sql(
-        "create table if not exists table_1 (" +
-            "a  integer primary key," +
-            "b  bigint," +
-            "c  decimal(7, 3)," +
-            "d  date," +
-            "e  time," +
-            "f  timestamp," +
-            "g  varchar(6)," +
-            "h  boolean," +
-            "i  varchar(6)," +
-            "dv integer," +
-            "gv integer" +
-            ")",
-        "create table if not exists table_2 (" +
-            "a  integer primary key," +
-            "b  varchar(6)," +
-            "dv char(1)," +
-            "gv char(2)" +
-            ")",
-        "truncate table table_1",
-        "truncate table table_2"
-    );
+  static final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+
+  static final String username = "sa";
+
+  Source source;
+
+  Destination destination;
+
+  @BeforeEach
+  void setUp() {
+    source = new Source(url, username, null);
+    destination = new DriverManagerDestination(url, username, null);
+  }
+
+  @Nested
+  class DataTypes {
 
     @BeforeEach
     void setUp() {
-        dbSetupTracker.launchIfNecessary(new DbSetup(destination, setUpQueries));
+      var ddl = sql("create table if not exists data_types ("
+          + "id uuid not null,"
+          + "num1 smallint,"
+          + "num2 integer,"
+          + "num3 bigint,"
+          + "num4 real,"
+          + "num5 decimal(7,3),"
+          + "text1 char(5),"
+          + "text2 varchar(100),"
+          + "date1 timestamp,"
+          + "date2 date,"
+          + "date3 time,"
+          + "bool1 boolean,"
+          + "primary key (id)"
+          + ")");
+      new DbSetup(destination, sequenceOf(ddl, truncate("data_types"))).launch();
     }
 
     @Test
-    void import_workbook_with_default_settings() {
-        Changes changes = new Changes(source).setStartPointNow();
-        Operation operation = excel("testdata_1.xlsx").build();
-        new DbSetup(destination, operation).launch();
-        assertThat(changes.setEndPointNow())
-            .hasNumberOfChanges(4)
-            .changeOnTableWithPks("table_1", 100)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo(10000000000L)
-            .value("c").isEqualTo(0.5)
-            .value("d").isEqualTo("2019-01-01")
-            .value("e").isEqualTo("20:30:01")
-            .value("f").isEqualTo("2019-02-01T12:34:56")
-            .value("g").isEqualTo("甲")
-            .value("h").isTrue()
-            .value("i").isNull()
-            .value("dv").isNull()
-            .value("gv").isNull()
-            .changeOnTableWithPks("table_1", 200)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(200)
-            .value("c").isEqualTo(0.25)
-            .value("d").isEqualTo("2019-01-02")
-            .value("e").isEqualTo("20:30:02")
-            .value("f").isEqualTo("2019-02-02T12:34:56")
-            .value("g").isEqualTo("乙")
-            .value("h").isFalse()
-            .value("i").isNull()
-            .value("dv").isNull()
-            .value("gv").isNull()
-            .changeOnTableWithPks("table_2", 1)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b1")
-            .value("dv").isNull()
-            .value("gv").isNull()
-            .changeOnTableWithPks("table_2", 2)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b2")
-            .value("dv").isNull()
-            .value("gv").isNull();
+    void import_with_default_settings() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("DataTypes/data_types.xlsx").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreation()
+          .rowAtEndPoint()
+          .value("id").isEqualTo(new UUID(0, 1))
+          .value("num1").isEqualTo(1000)
+          .value("num2").isEqualTo(20000)
+          .value("num3").isEqualTo(3000000000L)
+          .value("num4").isEqualTo(400.75)
+          .value("num5").isEqualTo(new BigDecimal("5000.333"))
+          .value("text1").isEqualTo("aaa  ")
+          .value("text2").isEqualTo("bbb")
+          .value("date1").isEqualTo(LocalDateTime.parse("2001-02-03T10:20:30.456"))
+          .value("date2").isEqualTo(LocalDate.parse("2001-02-03"))
+          .value("date3").isEqualTo(LocalTime.parse("10:20:30"))
+          .value("bool1").isTrue()
+          .changeOfCreation()
+          .rowAtEndPoint()
+          .value("id").isEqualTo(new UUID(0, 2))
+          .value("num1").isNull()
+          .value("num2").isNull()
+          .value("num3").isNull()
+          .value("num4").isNull()
+          .value("num5").isNull()
+          .value("text1").isNull()
+          .value("text2").isNull()
+          .value("date1").isNull()
+          .value("date2").isNull()
+          .value("date3").isNull()
+          .value("bool1").isFalse();
+    }
+  }
+
+  @Nested
+  class ExcelFile {
+
+    @Test
+    void throw_npe_if_location_is_null() {
+      assertThatThrownBy(() -> excel(null))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("location must not be null");
     }
 
     @Test
-    void import_workbook_with_dv_and_gv() {
-        Changes changes = new Changes(source).setStartPointNow();
-        Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2_margin", "table_2_error", "table_2_empty")
-            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
-            .withDefaultValue("table_1", "dv", 10)
-            .withDefaultValue("table_2", "dv", "X")
-            .withGeneratedValue("table_1", "gv", ValueGenerators.sequence())
-            .withGeneratedValue("table_2", "gv", ValueGenerators.stringSequence("Y"))
-            .build();
-        new DbSetup(destination, operation).launch();
-        assertThat(changes.setEndPointNow())
-            .hasNumberOfChanges(4)
-            .changeOnTableWithPks("table_1", 100)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo(10000000000L)
-            .value("c").isEqualTo(0.5)
-            .value("d").isEqualTo("2019-01-01")
-            .value("e").isEqualTo("20:30:01")
-            .value("f").isEqualTo("2019-02-01T12:34:56")
-            .value("g").isEqualTo("甲")
-            .value("h").isTrue()
-            .value("i").isNull()
-            .value("dv").isEqualTo(10)
-            .value("gv").isEqualTo(1)
-            .changeOnTableWithPks("table_1", 200)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("a").isEqualTo(200)
-            .value("c").isEqualTo(0.25)
-            .value("d").isEqualTo("2019-01-02")
-            .value("e").isEqualTo("20:30:02")
-            .value("f").isEqualTo("2019-02-02T12:34:56")
-            .value("g").isEqualTo("乙")
-            .value("h").isFalse()
-            .value("i").isNull()
-            .value("dv").isEqualTo(10)
-            .value("gv").isEqualTo(2)
-            .changeOnTableWithPks("table_2", 1)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b1")
-            .value("dv").isEqualTo("X")
-            .value("gv").isEqualTo("Y1")
-            .changeOnTableWithPks("table_2", 2)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b2")
-            .value("dv").isEqualTo("X")
-            .value("gv").isEqualTo("Y2");
+    void throw_iae_if_location_has_bean_not_found() {
+      assertThatThrownBy(() -> excel("not_found.xlsx"))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("not_found.xlsx not found");
+    }
+  }
+
+  @Nested
+  class TableNames {
+
+    @BeforeEach
+    void setUp() {
+      var table_11 = "create table if not exists table_11 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_12 = "create table if not exists table_12 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_21 = "create table if not exists table_21 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_22 = "create table if not exists table_22 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_21, table_22),
+          truncate("table_11", "table_12", "table_21", "table_22"))).launch();
     }
 
     @Test
-    void import_workbook_that_has_margin() {
-        Changes changes = new Changes(source).setStartPointNow();
-        Operation operation = excel("testdata_2.xlsx")
-            .include("table_2.+")
-            .exclude("table_2_(formula|error|empty)")
-            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
-            .margin(1, 2)
-            .build();
-        new DbSetup(destination, operation).launch();
-        assertThat(changes.setEndPointNow())
-            .hasNumberOfChanges(2)
-            .changeOnTableWithPks("table_2", 1)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b1")
-            .changeOnTableWithPks("table_2", 2)
-            .isCreation()
-            .rowAtEndPoint()
-            .value("b").isEqualTo("b2");
+    void import_all_sheets() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(4)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_21")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie")
+          .changeOfCreationOnTable("table_22")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(4)
+          .value("name").isEqualTo("Dave");
     }
 
     @Test
-    void import_workbook_that_contains_error() {
-        Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2_(margin|empty)")
-            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
-            .build();
-        assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
-                .hasMessage("error value contained: table_2_error!B2");
-        dbSetupTracker.skipNextLaunch();
+    void import_only_sheets_whose_name_matches_string_pattern() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .include(".+2$").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_22")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(4)
+          .value("name").isEqualTo("Dave");
     }
 
     @Test
-    void import_workbook_that_contains_empty_sheet() {
-        Operation operation = excel("testdata_2.xlsx")
-            .exclude("table_2_(margin|error)")
-            .tableMapper(sheet -> sheet.replaceFirst("_\\D+$", ""))
-            .build();
-        assertThatThrownBy(() -> new DbSetup(destination, operation).launch())
-                .hasMessage("header row not found: table_2_empty[0]");
-        dbSetupTracker.skipNextLaunch();
+    void import_only_sheets_whose_name_matches_string_patterns() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .include(".+2$", ".+11$").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(3)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_22")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(4)
+          .value("name").isEqualTo("Dave");
     }
 
-    static class IllegalArgument {
-
-        @Test
-        void file_not_found() {
-            assertThatThrownBy(() -> excel("xxx"))
-                    .hasMessage("xxx not found");
-        }
-
-        @Test
-        void location_is_null() {
-            String location = null;
-            assertThatThrownBy(() -> excel(location))
-                    .hasMessage("location must not be null");
-        }
-
-        @Test
-        void string_include_is_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .include((String[]) null))
-                .hasMessage("regex must not be null");
-        }
-
-        @Test
-        void string_include_contains_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .include((String) null))
-                .hasMessage("regex must not contain null");
-        }
-
-        @Test
-        void pattern_include_is_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .include((Pattern[]) null))
-                .hasMessage("patterns must not be null");
-        }
-
-        @Test
-        void pattern_include_contains_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .include((Pattern) null))
-                .hasMessage("patterns must not contain null");
-        }
-
-        @Test
-        void string_exclude_is_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude((String[]) null))
-                .hasMessage("regex must not be null");
-        }
-
-        @Test
-        void string_exclude_contains_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude((String) null))
-                .hasMessage("regex must not contain null");
-        }
-
-        @Test
-        void pattern_exclude_is_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude((Pattern[]) null))
-                .hasMessage("patterns must not be null");
-        }
-
-        @Test
-        void pattern_exclude_contains_null() {
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                .exclude((Pattern) null))
-                .hasMessage("patterns must not contain null");
-        }
-
-        @Test
-        void left_is_negative() {
-            int left = -1;
-            assertThatThrownBy(() -> excel("testdata_1.xlsx").left(left))
-                    .hasMessage("left must be greater than or equal to 0");
-        }
-
-        @Test
-        void top_is_negative() {
-            int top = -1;
-            assertThatThrownBy(() -> excel("testdata_1.xlsx").top(top))
-                    .hasMessage("top must be greater than or equal to 0");
-        }
-
-        @Test
-        void default_value_table_is_null() {
-            String table = null;
-            String column = "column";
-            Object value = new Object();
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                    .withDefaultValue(table, column, value))
-                    .hasMessage("table must not be null");
-        }
-
-        @Test
-        void default_value_column_is_null() {
-            String table = "table";
-            String column = null;
-            Object value = new Object();
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                    .withDefaultValue(table, column, value))
-                    .hasMessage("column must not be null");
-        }
-
-        @Test
-        void value_generator_table_is_null() {
-            String table = null;
-            String column = "column";
-            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                    .withGeneratedValue(table, column, valueGenerator))
-                    .hasMessage("table must not be null");
-        }
-
-        @Test
-        void value_generator_column_is_null() {
-            String table = "table";
-            String column = null;
-            ValueGenerator<?> valueGenerator = ValueGenerators.sequence();
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                    .withGeneratedValue(table, column, valueGenerator))
-                    .hasMessage("column must not be null");
-        }
-
-        @Test
-        void value_generator_generator_is_null() {
-            String table = "table";
-            String column = "column";
-            ValueGenerator<?> valueGenerator = null;
-            assertThatThrownBy(() -> excel("testdata_1.xlsx")
-                    .withGeneratedValue(table, column, valueGenerator))
-                    .hasMessage("valueGenerator must not be null");
-        }
+    @Test
+    void import_only_sheets_whose_name_matches_pattern() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .include(Pattern.compile(".+2$")).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_22")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(4)
+          .value("name").isEqualTo("Dave");
     }
+
+    @Test
+    void import_only_sheets_whose_name_matches_patterns() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .include(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(3)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_22")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(4)
+          .value("name").isEqualTo("Dave");
+    }
+
+    @Test
+    void skip_sheets_with_name_that_matches_string_pattern() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .exclude(".+2$").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_21")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie");
+    }
+
+    @Test
+    void skip_sheets_with_name_that_matches_string_patterns() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .exclude(".+2$", ".+11$").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(1)
+          .changeOfCreationOnTable("table_21")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie");
+    }
+
+    @Test
+    void skip_sheets_with_name_that_matches_pattern() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .exclude(Pattern.compile(".+2$")).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_21")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie");
+    }
+
+    @Test
+    void skip_sheets_with_name_that_matches_patterns() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("TableNames/table_names.xlsx")
+          .exclude(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(1)
+          .changeOfCreationOnTable("table_21")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie");
+    }
+
+    @Test
+    void throws_npe_if_string_pattern_to_include_is_null() {
+      String[] patterns = null;
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("regex must not be null");
+    }
+
+    @Test
+    void throws_npe_if_string_pattern_to_include_contains_null() {
+      String[] patterns = new String[]{".+2$", null};
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("regex must not contain null");
+    }
+
+    @Test
+    void throws_npe_if_pattern_to_include_is_null() {
+      Pattern[] patterns = null;
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("patterns must not be null");
+    }
+
+    @Test
+    void throws_npe_if_pattern_to_include_contains_null() {
+      Pattern[] patterns = new Pattern[]{Pattern.compile(".+2$"), null};
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("patterns must not contain null");
+    }
+  }
+
+  @Nested
+  class TableMapping {
+
+    @BeforeEach
+    void setUp() {
+      var table_11 = "create table if not exists table_11 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_12 = "create table if not exists table_12 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_13 = "create table if not exists table_13 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
+          truncate("table_11", "table_12", "table_13"))).launch();
+    }
+
+    @Test
+    void sheet_name_maps_to_table_name() {
+      var changes = new Changes(source).setStartPointNow();
+      var tables = Map.of("a", "table_13", "b", "table_12", "c", "table_11");
+      var operation = excel("TableMapping/table_mapping.xlsx")
+          .tableMapper(tables::get).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(3)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(3)
+          .value("name").isEqualTo("Charlie")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_13")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice");
+    }
+
+    @Test
+    void throws_npe_if_map_is_null() {
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").tableMapper(null))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("tableMapper must not be null");
+    }
+  }
+
+  @Nested
+  class Margin {
+
+    @BeforeEach
+    void setUp() {
+      var table_11 = "create table if not exists table_11 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_12 = "create table if not exists table_12 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      new DbSetup(destination, sequenceOf(sql(table_11, table_12),
+          truncate("table_11", "table_12"))).launch();
+    }
+
+    @Test
+    void default_margin_is_zero() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/no_margin.xlsx").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void left_is_zero() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/no_margin.xlsx").left(0).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void left_is_five() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/left_margin.xlsx").left(5).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void top_is_zero() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/no_margin.xlsx").top(0).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void top_is_five() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/top_margin.xlsx").top(5).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void margin_is_zero() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/no_margin.xlsx").margin(0, 0).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void left_is_two_and_top_is_three() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/left_top_margin.xlsx").margin(2, 3).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void throws_iae_if_left_is_negative() {
+      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").left(-1))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("left must be greater than or equal to 0");
+    }
+
+    @Test
+    void throws_iae_if_top_is_negative() {
+      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(-1))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("top must be greater than or equal to 0");
+    }
+  }
+
+  @Nested
+  class WithDefaultValue {
+
+    @BeforeEach
+    void setUp() {
+      var table_11 = "create table if not exists table_11 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_12 = "create table if not exists table_12 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_13 = "create table if not exists table_13 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
+          truncate("table_11", "table_12", "table_13"))).launch();
+    }
+
+    @Test
+    void specify_default_value() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("WithDefaultValue/with_default_value.xlsx")
+          .withDefaultValue("table_11", "name", "DEFAULT_1")
+          .withDefaultValue("table_13", "name", "DEFAULT_2").build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(5)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(10)
+          .value("name").isEqualTo("DEFAULT_1")
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(11)
+          .value("name").isEqualTo("DEFAULT_1")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(20)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_13")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(30)
+          .value("name").isEqualTo("DEFAULT_2")
+          .changeOfCreationOnTable("table_13")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(31)
+          .value("name").isEqualTo("DEFAULT_2");
+    }
+
+    @Test
+    void throws_npe_if_table_is_null() {
+      assertThatThrownBy(() -> excel("WithDefaultValue/with_default_value.xlsx")
+          .withDefaultValue(null, "name", "DEFAULT_1"))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("table must not be null");
+    }
+
+    @Test
+    void throws_npe_if_column_is_null() {
+      assertThatThrownBy(() -> excel("WithDefaultValue/with_default_value.xlsx")
+          .withDefaultValue("table_11", null, "DEFAULT_1"))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("column must not be null");
+    }
+  }
+
+  @Nested
+  class WithGeneratedValue {
+
+    @BeforeEach
+    void setUp() {
+      var table_11 = "create table if not exists table_11 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_12 = "create table if not exists table_12 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      var table_13 = "create table if not exists table_13 ("
+          + "id integer primary key,"
+          + "name varchar(100)"
+          + ")";
+      new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
+          truncate("table_11", "table_12", "table_13"))).launch();
+    }
+
+    @Test
+    void specify_value_generator() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("WithGeneratedValue/with_generated_value.xlsx")
+          .withGeneratedValue("table_11", "id", ValueGenerators.sequence().startingAt(100))
+          .withGeneratedValue("table_13", "id", ValueGenerators.sequence().startingAt(300))
+          .build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(5)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(100)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(101)
+          .value("name").isEqualTo("Bob")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Charlie")
+          .changeOfCreationOnTable("table_13")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(300)
+          .value("name").isEqualTo("Dave")
+          .changeOfCreationOnTable("table_13")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(301)
+          .value("name").isEqualTo("Erin");
+    }
+
+    @Test
+    void throws_npe_if_table_is_null() {
+      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
+          .withGeneratedValue(null, "name", ValueGenerators.sequence()))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("table must not be null");
+    }
+
+    @Test
+    void throws_npe_if_column_is_null() {
+      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
+          .withGeneratedValue("table_11", null, ValueGenerators.sequence()))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("column must not be null");
+    }
+
+    @Test
+    void throws_npe_if_generator_is_null() {
+      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
+          .withGeneratedValue("table_11", "name", null))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("valueGenerator must not be null");
+    }
+  }
 }
