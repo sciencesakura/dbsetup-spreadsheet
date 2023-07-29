@@ -42,6 +42,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.assertj.db.type.Changes;
 import org.assertj.db.type.Source;
@@ -430,9 +431,9 @@ class ImportTest {
     @Test
     void sheet_name_maps_to_table_name() {
       var changes = new Changes(source).setStartPointNow();
-      var tables = Map.of("a", "table_13", "b", "table_12", "c", "table_11");
+      var resolver = Map.of("a", "table_13", "b", "table_12", "c", "table_11");
       var operation = excel("TableMapping/table_mapping.xlsx")
-          .tableMapper(tables::get).build();
+          .resolver(resolver).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
           .hasNumberOfChanges(3)
@@ -451,10 +452,25 @@ class ImportTest {
     }
 
     @Test
-    void throws_npe_if_map_is_null() {
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").tableMapper(null))
+    void throws_dsre_if_resolver_could_not_resolve_table() {
+      var resolver = Map.of("a", "table_13", "b", "table_12");
+      assertThatThrownBy(() -> excel("TableMapping/table_mapping.xlsx").resolver(resolver).build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("could not resolve table name: c");
+    }
+
+    @Test
+    void throws_npe_if_resolver_is_null_1() {
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").resolver((Map<String, String>) null))
           .isInstanceOf(NullPointerException.class)
-          .hasMessage("tableMapper must not be null");
+          .hasMessage("resolver must not be null");
+    }
+
+    @Test
+    void throws_npe_if_resolver_is_null_2() {
+      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").resolver((Function<String, String>) null))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("resolver must not be null");
     }
   }
 
