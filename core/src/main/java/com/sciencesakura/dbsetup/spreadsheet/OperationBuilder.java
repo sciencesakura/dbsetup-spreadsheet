@@ -53,10 +53,14 @@ final class OperationBuilder {
             List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
+                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) {
+                    continue;
+                }
                 Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                if (isExcluded(builder.include, builder.exclude, sheetName)) continue;
+                if (isExcluded(builder.include, builder.exclude, sheetName)) {
+                    continue;
+                }
                 int rowIndex = builder.top;
                 Row row = sheet.getRow(rowIndex);
                 if (row == null) {
@@ -91,11 +95,17 @@ final class OperationBuilder {
                     break;
                 }
             }
-            if (!included) return true;
+            if (!included) {
+                return true;
+            }
         }
-        if (exclude == null) return false;
+        if (exclude == null) {
+            return false;
+        }
         for (Pattern ex : exclude) {
-            if (ex.matcher(sheetName).matches()) return true;
+            if (ex.matcher(sheetName).matches()) {
+                return true;
+            }
         }
         return false;
     }
@@ -104,7 +114,9 @@ final class OperationBuilder {
                                          Map<String, Map<String, Object>> defaultValues,
                                          String tableName) {
         Map<String, ?> dv = defaultValues.get(tableName);
-        if (dv == null) return;
+        if (dv == null) {
+            return;
+        }
         dv.forEach(ib::withDefaultValue);
     }
 
@@ -112,7 +124,9 @@ final class OperationBuilder {
                                            Map<String, Map<String, ValueGenerator<?>>> valueGenerators,
                                            String tableName) {
         Map<String, ValueGenerator<?>> vg = valueGenerators.get(tableName);
-        if (vg == null) return;
+        if (vg == null) {
+            return;
+        }
         vg.forEach(ib::withGeneratedValue);
     }
 
