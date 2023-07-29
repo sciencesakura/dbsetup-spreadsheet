@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import com.ninja_squad.dbsetup.DbSetupRuntimeException;
@@ -52,10 +53,14 @@ final class OperationBuilder {
             List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) continue;
+                if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) {
+                    continue;
+                }
                 Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                if (isExcluded(builder.include, builder.exclude, sheetName)) continue;
+                if (isExcluded(builder.include, builder.exclude, sheetName)) {
+                    continue;
+                }
                 int rowIndex = builder.top;
                 Row row = sheet.getRow(rowIndex);
                 if (row == null) {
@@ -90,11 +95,17 @@ final class OperationBuilder {
                     break;
                 }
             }
-            if (!included) return true;
+            if (!included) {
+                return true;
+            }
         }
-        if (exclude == null) return false;
+        if (exclude == null) {
+            return false;
+        }
         for (Pattern ex : exclude) {
-            if (ex.matcher(sheetName).matches()) return true;
+            if (ex.matcher(sheetName).matches()) {
+                return true;
+            }
         }
         return false;
     }
@@ -102,18 +113,20 @@ final class OperationBuilder {
     private static void setDefaultValues(Insert.Builder ib,
                                          Map<String, Map<String, Object>> defaultValues,
                                          String tableName) {
-        if (defaultValues == null) return;
         Map<String, ?> dv = defaultValues.get(tableName);
-        if (dv == null) return;
+        if (dv == null) {
+            return;
+        }
         dv.forEach(ib::withDefaultValue);
     }
 
     private static void setValueGenerators(Insert.Builder ib,
                                            Map<String, Map<String, ValueGenerator<?>>> valueGenerators,
                                            String tableName) {
-        if (valueGenerators == null) return;
         Map<String, ValueGenerator<?>> vg = valueGenerators.get(tableName);
-        if (vg == null) return;
+        if (vg == null) {
+            return;
+        }
         vg.forEach(ib::withGeneratedValue);
     }
 
@@ -131,7 +144,7 @@ final class OperationBuilder {
             int c = left + i;
             Cell cell = row.getCell(c);
             if (cell == null) {
-                throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
+                throw new DbSetupRuntimeException("header cell must not be blank: " + a1(row.getSheet(), row.getRowNum(), c));
             }
             Object value = value(cell, evaluator);
             if (value == null || "".equals(value)) {
