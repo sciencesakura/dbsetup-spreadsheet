@@ -8,7 +8,7 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 
 ## Requirements
 
-* Java 8+
+* Java 11+
 
 ## Installation
 
@@ -17,19 +17,13 @@ Microsoft Excelファイルからデータ取り込みができる[DbSetup](http
 #### Java
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:1.0.3'
-
-// optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:2.0.0'
 ```
 
 #### Kotlin
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:1.0.3'
-
-// optional - When import *.xlsx files
-testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.0'
 ```
 
 ### Maven
@@ -40,15 +34,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>1.0.3</version>
-  <scope>test</scope>
-</dependency>
-
-<!-- optional - When import *.xlsx files -->
-<dependency>
-  <groupId>org.apache.poi</groupId>
-  <artifactId>poi-ooxml</artifactId>
-  <version>5.2.2</version>
+  <version>2.0.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -59,15 +45,7 @@ testRuntimeOnly 'org.apache.poi:poi-ooxml:5.2.2'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>1.0.3</version>
-  <scope>test</scope>
-</dependency>
-
-<!-- optional - When import *.xlsx files -->
-<dependency>
-  <groupId>org.apache.poi</groupId>
-  <artifactId>poi-ooxml</artifactId>
-  <version>5.2.2</version>
+  <version>2.0.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -112,15 +90,15 @@ create table customer (
 |2|Sakura|3|
 |3|Xiaolang|2|
 
-準備したExcelファイルをクラスパス上に置き, 次のようなコードを書きます.
+準備したExcelファイルをクラスパス上に置き, 次のようなコードを書きます:
 
 Java:
 
 ```java
 import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
 
-Operation operation = excel("testdata.xlsx").build();
-DbSetup dbSetup = new DbSetup(destination, operation);
+var operation = excel("testdata.xlsx").build();
+var dbSetup = new DbSetup(destination, operation);
 dbSetup.launch();
 ```
 
