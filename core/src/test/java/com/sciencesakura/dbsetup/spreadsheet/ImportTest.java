@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.db.api.Assertions.assertThat;
 
 import com.ninja_squad.dbsetup.DbSetup;
+import com.ninja_squad.dbsetup.DbSetupRuntimeException;
 import com.ninja_squad.dbsetup.destination.Destination;
 import com.ninja_squad.dbsetup.destination.DriverManagerDestination;
 import com.ninja_squad.dbsetup.generator.ValueGenerators;
@@ -93,7 +94,7 @@ class ImportTest {
       var operation = excel("DataTypes/data_types.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
-          .hasNumberOfChanges(2)
+          .hasNumberOfChanges(3)
           .changeOfCreation()
           .rowAtEndPoint()
           .value("id").isEqualTo(new UUID(0, 1))
@@ -121,7 +122,21 @@ class ImportTest {
           .value("date1").isNull()
           .value("date2").isNull()
           .value("date3").isNull()
-          .value("bool1").isFalse();
+          .value("bool1").isFalse()
+          .changeOfCreation()
+          .rowAtEndPoint()
+          .value("id").isEqualTo(new UUID(0, 3))
+          .value("num1").isEqualTo(1001)
+          .value("num2").isEqualTo(20001)
+          .value("num3").isEqualTo(3000000001L)
+          .value("num4").isEqualTo(401.75)
+          .value("num5").isEqualTo(new BigDecimal("5001.333"))
+          .value("text1").isNull()
+          .value("text2").isEqualTo("aaabbb")
+          .value("date1").isEqualTo(LocalDateTime.parse("2001-02-04T10:20:30.456"))
+          .value("date2").isEqualTo(LocalDate.parse("2001-02-04"))
+          .value("date3").isNull()
+          .value("bool1").isTrue();
     }
   }
 
@@ -137,9 +152,30 @@ class ImportTest {
 
     @Test
     void throw_iae_if_location_has_bean_not_found() {
-      assertThatThrownBy(() -> excel("not_found.xlsx"))
+      assertThatThrownBy(() -> excel("ExcelFile/not_found.xlsx"))
           .isInstanceOf(IllegalArgumentException.class)
-          .hasMessage("not_found.xlsx not found");
+          .hasMessage("ExcelFile/not_found.xlsx not found");
+    }
+
+    @Test
+    void throw_dsre_if_header_row_contains_blank() {
+      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("blank_in_header").build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("header cell must not be blank: blank_in_header!B1");
+    }
+
+    @Test
+    void throw_dsre_if_header_row_contains_non_string_value() {
+      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("non_string_in_header").build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("header cell must be string type: non_string_in_header!B1");
+    }
+
+    @Test
+    void throw_dsre_if_header_row_contains_error() {
+      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("error_in_header").build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("error value contained: error_in_header!B1");
     }
   }
 
@@ -342,7 +378,7 @@ class ImportTest {
       String[] patterns = null;
       assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
           .isInstanceOf(NullPointerException.class)
-          .hasMessage("regex must not be null");
+          .hasMessage("patterns must not be null");
     }
 
     @Test
@@ -350,7 +386,7 @@ class ImportTest {
       String[] patterns = new String[]{".+2$", null};
       assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
           .isInstanceOf(NullPointerException.class)
-          .hasMessage("regex must not contain null");
+          .hasMessage("patterns must not contain null");
     }
 
     @Test
@@ -556,6 +592,20 @@ class ImportTest {
           .rowAtEndPoint()
           .value("id").isEqualTo(2)
           .value("name").isEqualTo("Bob");
+    }
+
+    @Test
+    void throw_dsre_if_header_row_is_not_found_1() {
+      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(8).build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("header row not found: table_11[8]");
+    }
+
+    @Test
+    void throw_dsre_if_header_row_is_not_found_2() {
+      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").left(8).build())
+          .isInstanceOf(DbSetupRuntimeException.class)
+          .hasMessage("header row not found: table_11[0]");
     }
 
     @Test

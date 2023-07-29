@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import static java.util.Objects.requireNonNull;
@@ -36,19 +37,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * An Operation which imports the Microsoft Excel file into the tables.
- * <p>
- * Usage:
- * </p>
- * <p>
- * When there are tables below:
- * </p>
- * <pre style="background-color: #f6f8fa;"><code>
- * create table country (
+ *
+ * <h2>Usage</h2>
+ * <p>When there are tables below:</p>
+ * <pre>
+ * {@code create table country (
  *   id    integer       not null,
  *   code  char(3)       not null,
  *   name  varchar(256)  not null,
@@ -63,11 +60,12 @@ import org.jetbrains.annotations.NotNull;
  *   primary key (id),
  *   foreign key (country) references country (id)
  * );
- * </code></pre>
+ * }
+ * </pre>
  * <p>
  * Create An Excel file with one worksheet per table, and name those worksheets
- * the same name as the tables. If there is a dependency between the tables,
- * put the worksheet of dependent table early.
+ * the same as the tables. If there is a dependency between the tables, put the
+ * worksheet of the dependent table early.
  * </p>
  * <table class="striped">
  *   <caption>country sheet</caption>
@@ -120,15 +118,16 @@ import org.jetbrains.annotations.NotNull;
  *   </tbody>
  * </table>
  * <p>
- * Put the prepared Excel file on the classpath, and write code like below:
+ * Put the prepared Excel file on the classpath, and write code like the below:
  * </p>
- * <pre style="background-color: #f6f8fa;"><code>
- * import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
+ * <pre>
+ * {@code import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
  *
- * Operation operation = excel("testdata.xlsx").build();
- * DbSetup dbSetup = new DbSetup(destination, operation);
+ * var operation = excel("testdata.xlsx").build();
+ * var dbSetup = new DbSetup(destination, operation);
  * dbSetup.launch();
- * </code></pre>
+ * }
+ * </pre>
  *
  * @author sciencesakura
  */
@@ -145,26 +144,36 @@ public final class Import implements Operation {
      * @throws IllegalArgumentException if the source file was not found
      */
     public static Builder excel(@NotNull String location) {
-        return new Builder(location);
+        var urlLocation = Import.class.getClassLoader()
+            .getResource(requireNonNull(location, "location must not be null"));
+        if (urlLocation == null) {
+            throw new IllegalArgumentException(location + " not found");
+        }
+        return new Builder(urlLocation);
     }
 
-    private final Builder builder;
-    private Operation internalOperation;
+    private final Operation internalOperation;
 
     private Import(Builder builder) {
-        this.builder = builder;
+        this.internalOperation = OperationBuilder.build(builder);
     }
 
     @Override
     public void execute(Connection connection, BinderConfiguration configuration) throws SQLException {
-        if (internalOperation == null) {
-            internalOperation = OperationBuilder.build(builder);
-        }
         internalOperation.execute(connection, configuration);
     }
 
     /**
      * A builder to create the {@code Import} instance.
+     *
+     * <h2>Usage</h2>
+     * <p>The default settings are:</p>
+     * <ul>
+     *   <li>{@code include([])}</li>
+     *   <li>{@code exclude([])}</li>
+     *   <li>{@code left(0)}</li>
+     *   <li>{@code top(0)}</li>
+     * </ul>
      *
      * @author sciencesakura
      */
@@ -176,16 +185,12 @@ public final class Import implements Operation {
         Function<String, String> tableMapper = Function.identity();
         int left;
         int top;
-        Map<String, Map<String, Object>> defaultValues;
-        Map<String, Map<String, ValueGenerator<?>>> valueGenerators;
+        final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
+        final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         private boolean built;
 
-        private Builder(String location) {
-            requireNonNull(location, "location must not be null");
-            this.location = getClass().getClassLoader().getResource(location);
-            if (this.location == null) {
-                throw new IllegalArgumentException(location + " not found");
-            }
+        private Builder(URL location) {
+            this.location = location;
         }
 
         /**
@@ -194,71 +199,73 @@ public final class Import implements Operation {
          * @return the new {@code Import} instance
          */
         public Import build() {
-            requireUnbuilt();
+            if (built) {
+                throw new IllegalStateException("already built");
+            }
             built = true;
             return new Import(this);
         }
 
         /**
-         * Specify the pattern of the worksheet name to be included from the importing.
+         * Specifies the patterns of the worksheet name to be included from the importing.
          *
-         * @param regex the regular expression pattern of the worksheet name to be included
+         * @param patterns the regular expression patterns of the worksheet name to be included
          * @return the reference to this object
          */
-        public Builder include(@NotNull @RegExp String... regex) {
-            requireUnbuilt();
-            requireNonNull(regex, "regex must not be null");
-            this.include = new Pattern[regex.length];
-            for (int i = 0; i < regex.length; i++) {
-                this.include[i] = Pattern.compile(requireNonNull(regex[i], "regex must not contain null"));
+        public Builder include(@NotNull String... patterns) {
+            requireNonNull(patterns, "patterns must not be null");
+            this.include = new Pattern[patterns.length];
+            int i = 0;
+            for (String pattern : patterns) {
+                this.include[i++] = Pattern.compile(requireNonNull(pattern, "patterns must not contain null"));
             }
             return this;
         }
 
         /**
-         * Specify the pattern of the worksheet name to be included from the importing.
+         * Specifies the patterns of the worksheet name to be included from the importing.
          *
-         * @param patterns the regular expression pattern of the worksheet name to be included
+         * @param patterns the regular expression patterns of the worksheet name to be included
          * @return the reference to this object
          */
         public Builder include(@NotNull Pattern... patterns) {
-            requireUnbuilt();
             requireNonNull(patterns, "patterns must not be null");
             this.include = new Pattern[patterns.length];
-            for (int i = 0; i < patterns.length; i++) {
-                this.include[i] = requireNonNull(patterns[i], "patterns must not contain null");
+            int i = 0;
+            for (Pattern pattern : patterns) {
+                this.include[i++] = requireNonNull(pattern, "patterns must not contain null");
             }
             return this;
         }
 
         /**
-         * Specify the pattern of the worksheet name to be excluded from the importing.
+         * Specifies the patterns of the worksheet name to be excluded from the importing.
          *
-         * @param regex the regular expression pattern of the worksheet name to be excluded
+         * @param patterns the regular expression patterns of the worksheet name to be excluded
          * @return the reference to this object
          */
-        public Builder exclude(@NotNull @RegExp String... regex) {
-            requireUnbuilt();
-            requireNonNull(regex, "regex must not be null");
-            this.exclude = new Pattern[regex.length];
-            for (int i = 0; i < regex.length; i++) {
-                this.exclude[i] = Pattern.compile(requireNonNull(regex[i], "regex must not contain null"));
+        public Builder exclude(@NotNull String... patterns) {
+            requireNonNull(patterns, "patterns must not be null");
+            this.exclude = new Pattern[patterns.length];
+            int i = 0;
+            for (String pattern : patterns) {
+                this.exclude[i++] = Pattern.compile(requireNonNull(pattern, "patterns must not contain null"));
             }
             return this;
         }
 
         /**
-         * Specify the pattern of the worksheet name to be excluded from the importing.
+         * Specifies the patterns of the worksheet name to be excluded from the importing.
          *
-         * @param patterns the regular expression pattern of the worksheet name to be excluded
+         * @param patterns the regular expression patterns of the worksheet name to be excluded
          * @return the reference to this object
          */
         public Builder exclude(@NotNull Pattern... patterns) {
-            requireUnbuilt();
             requireNonNull(patterns, "patterns must not be null");
             this.exclude = new Pattern[patterns.length];
-            for (int i = 0; i < patterns.length; i++) {
-                this.exclude[i] = requireNonNull(patterns[i], "patterns must not contain null");
+            int i = 0;
+            for (Pattern pattern : patterns) {
+                this.exclude[i++] = requireNonNull(pattern, "patterns must not contain null");
             }
             return this;
         }
@@ -270,22 +277,20 @@ public final class Import implements Operation {
          * @return the reference to this object
          */
         public Builder tableMapper(@NotNull Function<String, String> tableMapper) {
-            requireUnbuilt();
             this.tableMapper = requireNonNull(tableMapper, "tableMapper must not be null");
             return this;
         }
 
         /**
-         * Specify the start column index of the worksheet to read data.
+         * Specifies the start column index of the worksheet to read data.
          * <p>
-         * By default 0 is used.
+         * By default {@code 0} is used.
          * </p>
          *
          * @param left the 0-based column index, must be non-negative
          * @return the reference to this object
          */
         public Builder left(int left) {
-            requireUnbuilt();
             if (left < 0) {
                 throw new IllegalArgumentException("left must be greater than or equal to 0");
             }
@@ -294,16 +299,15 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specify the start row index of the worksheet to read data.
+         * Specifies the start row index of the worksheet to read data.
          * <p>
-         * By default 0 is used.
+         * By default {@code 0} is used.
          * </p>
          *
          * @param top the 0-based row index, must be non-negative
          * @return the reference to this object
          */
         public Builder top(int top) {
-            requireUnbuilt();
             if (top < 0) {
                 throw new IllegalArgumentException("top must be greater than or equal to 0");
             }
@@ -312,9 +316,9 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specify the start column index and row index of the worksheet to read data.
+         * Specifies the start column index and row index of the worksheet to read data.
          * <p>
-         * By default <code>(0, 0)</code> is used.
+         * By default {@code (0, 0)} is used.
          * </p>
          *
          * @param left the 0-based column index, must be non-negative
@@ -326,7 +330,7 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specify the default value for the given pair of table and column.
+         * Specifies the default value for the given pair of table and column.
          *
          * @param table  the table name
          * @param column the column name
@@ -335,18 +339,14 @@ public final class Import implements Operation {
          */
         public Builder withDefaultValue(@NotNull String table, @NotNull String column,
                                         Object value) {
-            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
-            if (defaultValues == null) {
-                defaultValues = new HashMap<>();
-            }
             defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
             return this;
         }
 
         /**
-         * Specify the value generator for the given pair of table and column.
+         * Specifies the value generator for the given pair of table and column.
          *
          * @param table          the table name
          * @param column         the column name
@@ -355,19 +355,11 @@ public final class Import implements Operation {
          */
         public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
                                           @NotNull ValueGenerator<?> valueGenerator) {
-            requireUnbuilt();
             requireNonNull(table, "table must not be null");
             requireNonNull(column, "column must not be null");
             requireNonNull(valueGenerator, "valueGenerator must not be null");
-            if (valueGenerators == null) {
-                valueGenerators = new HashMap<>();
-            }
             valueGenerators.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, valueGenerator);
             return this;
-        }
-
-        private void requireUnbuilt() {
-            if (built) throw new IllegalStateException("already built");
         }
     }
 }

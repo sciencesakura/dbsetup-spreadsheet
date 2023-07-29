@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package com.sciencesakura.dbsetup.spreadsheet;
 
 import com.ninja_squad.dbsetup.DbSetupRuntimeException;
@@ -102,7 +103,6 @@ final class OperationBuilder {
     private static void setDefaultValues(Insert.Builder ib,
                                          Map<String, Map<String, Object>> defaultValues,
                                          String tableName) {
-        if (defaultValues == null) return;
         Map<String, ?> dv = defaultValues.get(tableName);
         if (dv == null) return;
         dv.forEach(ib::withDefaultValue);
@@ -111,7 +111,6 @@ final class OperationBuilder {
     private static void setValueGenerators(Insert.Builder ib,
                                            Map<String, Map<String, ValueGenerator<?>>> valueGenerators,
                                            String tableName) {
-        if (valueGenerators == null) return;
         Map<String, ValueGenerator<?>> vg = valueGenerators.get(tableName);
         if (vg == null) return;
         vg.forEach(ib::withGeneratedValue);
@@ -131,7 +130,7 @@ final class OperationBuilder {
             int c = left + i;
             Cell cell = row.getCell(c);
             if (cell == null) {
-                throw new DbSetupRuntimeException("header cell not found: " + a1(row.getSheet(), row.getRowNum(), c));
+                throw new DbSetupRuntimeException("header cell must not be blank: " + a1(row.getSheet(), row.getRowNum(), c));
             }
             Object value = value(cell, evaluator);
             if (value == null || "".equals(value)) {
