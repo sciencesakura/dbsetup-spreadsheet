@@ -182,7 +182,7 @@ public final class Import implements Operation {
         final URL location;
         Pattern[] include;
         Pattern[] exclude;
-        Function<String, String> tableMapper = Function.identity();
+        Function<String, String> resolver = Function.identity();
         int left;
         int top;
         final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
@@ -271,13 +271,25 @@ public final class Import implements Operation {
         }
 
         /**
-         * Specify the mapper to map the worksheet name to the table name.
+         * Specifies the resolver to map the worksheet name to the table name.
          *
-         * @param tableMapper the mapper to map the worksheet name to the table name
+         * @param resolver the resolver to map the worksheet name to the table name
          * @return the reference to this object
          */
-        public Builder tableMapper(@NotNull Function<String, String> tableMapper) {
-            this.tableMapper = requireNonNull(tableMapper, "tableMapper must not be null");
+        public Builder resolver(@NotNull Map<String, String> resolver) {
+            requireNonNull(resolver, "resolver must not be null");
+            this.resolver = resolver::get;
+            return this;
+        }
+
+        /**
+         * Specifies the resolver to map the worksheet name to the table name.
+         *
+         * @param resolver the resolver to map the worksheet name to the table name
+         * @return the reference to this object
+         */
+        public Builder resolver(@NotNull Function<String, String> resolver) {
+            this.resolver = requireNonNull(resolver, "resolver must not be null");
             return this;
         }
 

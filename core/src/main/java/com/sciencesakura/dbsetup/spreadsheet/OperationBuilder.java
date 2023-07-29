@@ -70,7 +70,10 @@ final class OperationBuilder {
                 if (width <= 0) {
                     throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
                 }
-                String tableName = builder.tableMapper.apply(sheetName);
+                String tableName = builder.resolver.apply(sheetName);
+                if (tableName == null) {
+                    throw new DbSetupRuntimeException("could not resolve table name: " + sheetName);
+                }
                 Insert.Builder ib = Insert.into(tableName)
                         .columns(columns(row, builder.left, width, evaluator));
                 setDefaultValues(ib, builder.defaultValues, tableName);
