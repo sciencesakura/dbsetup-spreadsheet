@@ -39,6 +39,13 @@
     <kotlin.version>1.8.22</kotlin.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
+
+    <java.require.version>${java.version}</java.require.version>
+    <maven.require.version>3.9.0</maven.require.version>
+
+    <!-- plugin versions -->
+    <maven.enforcer.plugin.version>3.4.1</maven.enforcer.plugin.version>
+    <versions.maven.plugin.version>2.16.2</versions.maven.plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -103,7 +110,28 @@
             </execution>
           </executions>
         </plugin>
-
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>${maven.enforcer.plugin.version}</version>
+          <configuration>
+            <rules>
+              <requireJavaVersion>
+                <version>${java.require.version}</version>
+              </requireJavaVersion>
+              <requireMavenVersion>
+                <version>${maven.require.version}</version>
+              </requireMavenVersion>
+            </rules>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.3.0</version>
@@ -196,7 +224,11 @@
             </execution>
           </executions>
         </plugin>
-
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>${versions.maven.plugin.version}</version>
+        </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
@@ -241,6 +273,10 @@
 
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <plugin>
         <artifactId>maven-gpg-plugin</artifactId>
         <version>3.1.0</version>
         <executions>
@@ -251,7 +287,10 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
