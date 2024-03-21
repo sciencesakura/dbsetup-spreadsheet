@@ -142,6 +142,7 @@ class ImportTest {
   }
 
   @Nested
+  @SuppressWarnings("ConstantConditions")
   class ExcelFile {
 
     @Test
@@ -181,6 +182,7 @@ class ImportTest {
   }
 
   @Nested
+  @SuppressWarnings("ConstantConditions")
   class TableNames {
 
     @BeforeEach
@@ -408,6 +410,7 @@ class ImportTest {
   }
 
   @Nested
+  @SuppressWarnings("ConstantConditions")
   class TableMapping {
 
     @BeforeEach
@@ -664,6 +667,7 @@ class ImportTest {
   }
 
   @Nested
+  @SuppressWarnings("ConstantConditions")
   class WithDefaultValue {
 
     @BeforeEach
@@ -733,6 +737,7 @@ class ImportTest {
   }
 
   @Nested
+  @SuppressWarnings("ConstantConditions")
   class WithGeneratedValue {
 
     @BeforeEach
