@@ -173,6 +173,7 @@ public final class Import implements Operation {
      *   <li>{@code exclude([])}</li>
      *   <li>{@code left(0)}</li>
      *   <li>{@code top(0)}</li>
+     *   <li>{@code skipAfterHeader(0)}</li>
      * </ul>
      *
      * @author sciencesakura
@@ -185,6 +186,7 @@ public final class Import implements Operation {
         Function<String, String> resolver = Function.identity();
         int left;
         int top;
+        int skipAfterHeader;
         final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
         final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         private boolean built;
@@ -339,6 +341,24 @@ public final class Import implements Operation {
          */
         public Builder margin(int left, int top) {
             return left(left).top(top);
+        }
+
+        /**
+         * Specifies the number of rows to skip after the header row.
+         * <p>
+         * By default {@code 0} is used.
+         * </p>
+         *
+         * @param n the number of rows to skip after the header row, must be non-negative
+         * @return the reference to this object
+         * @throws IllegalArgumentException if the specified value is negative
+         */
+        public Builder skipAfterHeader(int n) {
+            if (n < 0) {
+                throw new IllegalArgumentException("skipAfterHeader must be greater than or equal to 0");
+            }
+            this.skipAfterHeader = n;
+            return this;
         }
 
         /**

@@ -611,6 +611,23 @@ class ImportTest {
     }
 
     @Test
+    void margin_between_header_and_data() {
+      var changes = new Changes(source).setStartPointNow();
+      var operation = excel("Margin/margin_between_header_and_data.xlsx").skipAfterHeader(1).build();
+      new DbSetup(destination, operation).launch();
+      assertThat(changes.setEndPointNow())
+          .hasNumberOfChanges(2)
+          .changeOfCreationOnTable("table_11")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(1)
+          .value("name").isEqualTo("Alice")
+          .changeOfCreationOnTable("table_12")
+          .rowAtEndPoint()
+          .value("id").isEqualTo(2)
+          .value("name").isEqualTo("Bob");
+    }
+
+    @Test
     void throw_dsre_if_header_row_is_not_found_1() {
       assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(8).build())
           .isInstanceOf(DbSetupRuntimeException.class)
@@ -636,6 +653,13 @@ class ImportTest {
       assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(-1))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("top must be greater than or equal to 0");
+    }
+
+    @Test
+    void throws_iae_if_margin_between_header_and_data_is_negative() {
+      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").skipAfterHeader(-1))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("skipAfterHeader must be greater than or equal to 0");
     }
   }
 
