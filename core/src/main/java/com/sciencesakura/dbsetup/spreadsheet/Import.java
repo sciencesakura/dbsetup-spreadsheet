@@ -171,8 +171,11 @@ public final class Import implements Operation {
      * <ul>
      *   <li>{@code include([])}</li>
      *   <li>{@code exclude([])}</li>
+     *   <li>{@code resolver(i -> i)}</li>
      *   <li>{@code left(0)}</li>
      *   <li>{@code top(0)}</li>
+     *   <li>{@code margin(0, 0)}</li>
+     *   <li>{@code skipAfterHeader(0)}</li>
      * </ul>
      *
      * @author sciencesakura
@@ -185,6 +188,7 @@ public final class Import implements Operation {
         Function<String, String> resolver = Function.identity();
         int left;
         int top;
+        int skipAfterHeader;
         final Map<String, Map<String, Object>> defaultValues = new HashMap<>();
         final Map<String, Map<String, ValueGenerator<?>>> valueGenerators = new HashMap<>();
         private boolean built;
@@ -197,6 +201,7 @@ public final class Import implements Operation {
          * Build a new {@code Import} instance.
          *
          * @return the new {@code Import} instance
+         * @throws IllegalStateException if this method was called more than once on the same instance
          */
         public Import build() {
             if (built) {
@@ -278,8 +283,7 @@ public final class Import implements Operation {
          */
         public Builder resolver(@NotNull Map<String, String> resolver) {
             requireNonNull(resolver, "resolver must not be null");
-            this.resolver = resolver::get;
-            return this;
+            return resolver(resolver::get);
         }
 
         /**
@@ -301,6 +305,7 @@ public final class Import implements Operation {
          *
          * @param left the 0-based column index, must be non-negative
          * @return the reference to this object
+         * @throws IllegalArgumentException if the specified value is negative
          */
         public Builder left(int left) {
             if (left < 0) {
@@ -318,6 +323,7 @@ public final class Import implements Operation {
          *
          * @param top the 0-based row index, must be non-negative
          * @return the reference to this object
+         * @throws IllegalArgumentException if the specified value is negative
          */
         public Builder top(int top) {
             if (top < 0) {
@@ -336,9 +342,28 @@ public final class Import implements Operation {
          * @param left the 0-based column index, must be non-negative
          * @param top  the 0-based row index, must be non-negative
          * @return the reference to this object
+         * @throws IllegalArgumentException if the specified value is negative
          */
         public Builder margin(int left, int top) {
             return left(left).top(top);
+        }
+
+        /**
+         * Specifies the number of rows to skip after the header row.
+         * <p>
+         * By default {@code 0} is used.
+         * </p>
+         *
+         * @param n the number of rows to skip after the header row, must be non-negative
+         * @return the reference to this object
+         * @throws IllegalArgumentException if the specified value is negative
+         */
+        public Builder skipAfterHeader(int n) {
+            if (n < 0) {
+                throw new IllegalArgumentException("skipAfterHeader must be greater than or equal to 0");
+            }
+            this.skipAfterHeader = n;
+            return this;
         }
 
         /**

@@ -78,6 +78,7 @@ final class OperationBuilder {
                         .columns(columns(row, builder.left, width, evaluator));
                 setDefaultValues(ib, builder.defaultValues, tableName);
                 setValueGenerators(ib, builder.valueGenerators, tableName);
+                rowIndex += builder.skipAfterHeader;
                 while ((row = sheet.getRow(++rowIndex)) != null) {
                     ib.values(values(row, builder.left, width, evaluator));
                 }
