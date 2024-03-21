@@ -42,7 +42,10 @@ fun DbSetupBuilder.excel(location: String) {
  * @param configure the function used to configure the Excel import
  * @throws IllegalArgumentException if the source file was not found
  */
-fun DbSetupBuilder.excel(location: String, configure: Import.Builder.() -> Unit) {
+fun DbSetupBuilder.excel(
+    location: String,
+    configure: Import.Builder.() -> Unit,
+) {
     val excelBuilder = Import.excel(location)
     excelBuilder.configure()
     execute(excelBuilder.build())

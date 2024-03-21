@@ -32,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class ExcelTest {
-
     val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
 
     val username = "sa"
@@ -43,20 +42,22 @@ class ExcelTest {
 
     @BeforeEach
     fun setUp() {
-        val table_11 = """
+        val table11 =
+            """
             create table if not exists table_11 (
               id integer primary key,
               name varchar(100)
             )
-        """.trimIndent()
-        val table_12 = """
+            """.trimIndent()
+        val table12 =
+            """
             create table if not exists table_12 (
               id integer primary key,
               name varchar(100)
             )
-        """.trimIndent()
+            """.trimIndent()
         dbSetup(destination) {
-            sql(table_11, table_12)
+            sql(table11, table12)
             truncate("table_11", "table_12")
         }.launch()
     }
