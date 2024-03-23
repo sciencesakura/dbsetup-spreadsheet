@@ -17,13 +17,13 @@ A [DbSetup](http://dbsetup.ninja-squad.com/) extension to import data from Micro
 #### Java
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:2.0.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:2.0.1'
 ```
 
 #### Kotlin
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.0'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.1'
 ```
 
 ### Maven
@@ -34,7 +34,7 @@ testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.0'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -45,7 +45,7 @@ testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.0'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
   <scope>test</scope>
 </dependency>
 ```
