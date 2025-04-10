@@ -70,7 +70,7 @@
     <jetbrains-annotations.version>13.0</jetbrains-annotations.version>
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <log4j2.version>2.21.1</log4j2.version>
-    <poi.version>5.2.5</poi.version>
+    <poi.version>5.4.0</poi.version>
   </properties>
 
   <dependencyManagement>
