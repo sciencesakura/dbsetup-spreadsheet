@@ -7,14 +7,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version-file: .java-version
           distribution: zulu
-          java-version: 11
           cache: maven
-      - run: rm -rf ./docs/apidocs ./docs/dokka
       - name: Generate Javadoc
         run: ./mvnw -e --batch-mode -pl core javadoc:javadoc -Dcheckstyle.skip=true -Djacoco.skip=true
+      - name: Move Javadoc to docs
+        run: mv -f core/target/reports/apidocs docs/
       - name: Generate Dokka
-        run: ./mvnw -e --batch-mode -pl kotlin dokka:dokka -Dktlint.skip=true -Djacoco.skip=true
+        run: ./mvnw -e --batch-mode -pl kotlin dokka:dokka
+      - name: Move Dokka to docs
+        run: mv -f kotlin/target/dokka docs/
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:

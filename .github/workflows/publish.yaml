@@ -1,8 +1,5 @@
 name: publish
-on:
-  push:
-    branches:
-      - master
+on: workflow_dispatch
 jobs:
   publish-artifacts:
     runs-on: ubuntu-latest
@@ -10,16 +7,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version-file: .java-version
           distribution: zulu
-          java-version: 11
           cache: maven
-          server-id: ossrh
+          server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      - run: ./mvnw -e --batch-mode deploy
+      - run: ./mvnw -e --batch-mode deploy -Djacoco.skip=true
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

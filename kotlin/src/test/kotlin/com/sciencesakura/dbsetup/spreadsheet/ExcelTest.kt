@@ -26,8 +26,8 @@ package com.sciencesakura.dbsetup.spreadsheet
 import com.ninja_squad.dbsetup.destination.DriverManagerDestination
 import com.ninja_squad.dbsetup_kotlin.dbSetup
 import org.assertj.db.api.Assertions.assertThat
+import org.assertj.db.type.AssertDbConnectionFactory
 import org.assertj.db.type.Changes
-import org.assertj.db.type.Source
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -36,7 +36,7 @@ class ExcelTest {
 
     val username = "sa"
 
-    val source = Source(url, username, null)
+    val connection = AssertDbConnectionFactory.of(url, username, null).create()
 
     val destination = DriverManagerDestination.with(url, username, null)
 
@@ -64,7 +64,7 @@ class ExcelTest {
 
     @Test
     fun import_excel() {
-        val changes = Changes(source).setStartPointNow()
+        val changes = connection.changes().build().setStartPointNow()
         dbSetup(destination) {
             excel("kt_test.xlsx")
         }.launch()
@@ -76,7 +76,7 @@ class ExcelTest {
 
     @Test
     fun import_excel_with_configure() {
-        val changes = Changes(source).setStartPointNow()
+      val changes = connection.changes().build().setStartPointNow()
         dbSetup(destination) {
             excel("kt_test.xlsx") {
                 exclude("table_12")

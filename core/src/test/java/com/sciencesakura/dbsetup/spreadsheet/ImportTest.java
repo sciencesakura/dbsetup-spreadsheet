@@ -44,8 +44,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import org.assertj.db.type.Changes;
-import org.assertj.db.type.Source;
+import org.assertj.db.type.AssertDbConnection;
+import org.assertj.db.type.AssertDbConnectionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,13 +56,13 @@ class ImportTest {
 
   static final String username = "sa";
 
-  Source source;
+  AssertDbConnection connection;
 
   Destination destination;
 
   @BeforeEach
   void setUp() {
-    source = new Source(url, username, null);
+    connection = AssertDbConnectionFactory.of(url, username, null).create();
     destination = new DriverManagerDestination(url, username, null);
   }
 
@@ -91,7 +91,7 @@ class ImportTest {
 
     @Test
     void import_with_default_settings() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("DataTypes/data_types.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -209,7 +209,7 @@ class ImportTest {
 
     @Test
     void import_all_sheets() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -234,7 +234,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_string_pattern() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(".+2$").build();
       new DbSetup(destination, operation).launch();
@@ -252,7 +252,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_string_patterns() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(".+2$", ".+11$").build();
       new DbSetup(destination, operation).launch();
@@ -274,7 +274,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_pattern() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(Pattern.compile(".+2$")).build();
       new DbSetup(destination, operation).launch();
@@ -292,7 +292,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_patterns() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
       new DbSetup(destination, operation).launch();
@@ -314,7 +314,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_string_pattern() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(".+2$").build();
       new DbSetup(destination, operation).launch();
@@ -332,7 +332,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_string_patterns() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(".+2$", ".+11$").build();
       new DbSetup(destination, operation).launch();
@@ -346,7 +346,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_pattern() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(Pattern.compile(".+2$")).build();
       new DbSetup(destination, operation).launch();
@@ -364,7 +364,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_patterns() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
       new DbSetup(destination, operation).launch();
@@ -433,7 +433,7 @@ class ImportTest {
 
     @Test
     void sheet_name_maps_to_table_name() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var resolver = Map.of("a", "table_13", "b", "table_12", "c", "table_11");
       var operation = excel("TableMapping/table_mapping.xlsx")
           .resolver(resolver).build();
@@ -496,7 +496,7 @@ class ImportTest {
 
     @Test
     void default_margin_is_zero() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -513,7 +513,7 @@ class ImportTest {
 
     @Test
     void left_is_zero() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").left(0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -530,7 +530,7 @@ class ImportTest {
 
     @Test
     void left_is_five() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/left_margin.xlsx").left(5).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -547,7 +547,7 @@ class ImportTest {
 
     @Test
     void top_is_zero() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").top(0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -564,7 +564,7 @@ class ImportTest {
 
     @Test
     void top_is_five() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/top_margin.xlsx").top(5).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -581,7 +581,7 @@ class ImportTest {
 
     @Test
     void margin_is_zero() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").margin(0, 0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -598,7 +598,7 @@ class ImportTest {
 
     @Test
     void left_is_two_and_top_is_three() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/left_top_margin.xlsx").margin(2, 3).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -615,7 +615,7 @@ class ImportTest {
 
     @Test
     void margin_between_header_and_data() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("Margin/margin_between_header_and_data.xlsx").skipAfterHeader(1).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -690,7 +690,7 @@ class ImportTest {
 
     @Test
     void specify_default_value() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("WithDefaultValue/with_default_value.xlsx")
           .withDefaultValue("table_11", "name", "DEFAULT_1")
           .withDefaultValue("table_13", "name", "DEFAULT_2").build();
@@ -760,7 +760,7 @@ class ImportTest {
 
     @Test
     void specify_value_generator() {
-      var changes = new Changes(source).setStartPointNow();
+      var changes = connection.changes().build().setStartPointNow();
       var operation = excel("WithGeneratedValue/with_generated_value.xlsx")
           .withGeneratedValue("table_11", "id", ValueGenerators.sequence().startingAt(100))
           .withGeneratedValue("table_13", "id", ValueGenerators.sequence().startingAt(300))
