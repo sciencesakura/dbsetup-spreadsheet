@@ -27,9 +27,8 @@ import com.ninja_squad.dbsetup.destination.DriverManagerDestination
 import com.ninja_squad.dbsetup_kotlin.dbSetup
 import org.assertj.db.api.Assertions.assertThat
 import org.assertj.db.type.AssertDbConnectionFactory
-import org.assertj.db.type.Changes
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class ExcelTest {
     val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
@@ -40,7 +39,7 @@ class ExcelTest {
 
     val destination = DriverManagerDestination.with(url, username, null)
 
-    @BeforeEach
+    @BeforeTest
     fun setUp() {
         val table11 =
             """
