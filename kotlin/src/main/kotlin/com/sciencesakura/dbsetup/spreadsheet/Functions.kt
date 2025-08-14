@@ -11,7 +11,7 @@ import com.ninja_squad.dbsetup_kotlin.DbSetupBuilder
  * @throws IllegalArgumentException if the source file was not found
  */
 fun DbSetupBuilder.excel(location: String) {
-    execute(Import.excel(location).build())
+  execute(Import.excel(location).build())
 }
 
 /**
@@ -22,10 +22,10 @@ fun DbSetupBuilder.excel(location: String) {
  * @throws IllegalArgumentException if the source file was not found
  */
 fun DbSetupBuilder.excel(
-    location: String,
-    configure: Import.Builder.() -> Unit,
+  location: String,
+  configure: Import.Builder.() -> Unit,
 ) {
-    val excelBuilder = Import.excel(location)
-    excelBuilder.configure()
-    execute(excelBuilder.build())
+  val excelBuilder = Import.excel(location)
+  excelBuilder.configure()
+  execute(excelBuilder.build())
 }
