@@ -1,0 +1,17 @@
+name: build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version-file: .java-version
+          distribution: zulu
+          cache: maven
+      - run: ./mvnw -e --batch-mode test -Djacoco.skip=true
