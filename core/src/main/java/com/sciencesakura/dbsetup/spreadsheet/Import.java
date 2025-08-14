@@ -18,94 +18,17 @@ import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * An Operation which imports the Microsoft Excel file into the tables.
+ * An Operation which imports the Microsoft Excel file into the database.
  *
- * <h2>Usage</h2>
- * <p>When there are tables below:</p>
- * <pre>
- * {@code create table country (
- *   id    integer       not null,
- *   code  char(3)       not null,
- *   name  varchar(256)  not null,
- *   primary key (id),
- *   unique (code)
- * );
+ * <p>We recommend to import {@code excel} method statically so that your code looks clearer.</p>
+ * <pre>{@code import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;}</pre>
  *
- * create table customer (
- *   id      integer       not null,
- *   name    varchar(256)  not null,
- *   country integer       not null,
- *   primary key (id),
- *   foreign key (country) references country (id)
- * );
- * }
- * </pre>
- * <p>
- * Create An Excel file with one worksheet per table, and name those worksheets
- * the same as the tables. If there is a dependency between the tables, put the
- * worksheet of the dependent table early.
- * </p>
- * <table class="striped">
- *   <caption>country sheet</caption>
- *   <tbody>
- *     <tr>
- *       <th>id</th>
- *       <th>code</th>
- *       <th>name</th>
- *     </tr>
- *     <tr>
- *       <td>1</td>
- *       <td>GBR</td>
- *       <td>United Kingdom</td>
- *     </tr>
- *     <tr>
- *       <td>2</td>
- *       <td>HKG</td>
- *       <td>Hong Kong</td>
- *     </tr>
- *     <tr>
- *       <td>3</td>
- *       <td>JPN</td>
- *       <td>Japan</td>
- *     </tr>
- *   </tbody>
- * </table>
- * <table class="striped">
- *   <caption>customer sheet</caption>
- *   <tbody>
- *     <tr>
- *       <th>id</th>
- *       <th>name</th>
- *       <th>country</th>
- *     </tr>
- *     <tr>
- *       <td>1</td>
- *       <td>Eriol</td>
- *       <td>1</td>
- *     </tr>
- *     <tr>
- *       <td>2</td>
- *       <td>Sakura</td>
- *       <td>3</td>
- *     </tr>
- *     <tr>
- *       <td>3</td>
- *       <td>Xiaolang</td>
- *       <td>2</td>
- *     </tr>
- *   </tbody>
- * </table>
- * <p>
- * Put the prepared Excel file on the classpath, and write code like the below:
- * </p>
- * <pre>
- * {@code import static com.sciencesakura.dbsetup.spreadsheet.Import.excel;
- *
- * var operation = excel("testdata.xlsx").build();
+ * <p>Then you can use {@code excel} method as follows:</p>
+ * <pre>{@code
+ * var operation = excel("test-data.xlsx").build();
  * var dbSetup = new DbSetup(destination, operation);
  * dbSetup.launch();
- * }
- * </pre>
+ * }</pre>
  *
  * @author sciencesakura
  */
@@ -113,13 +36,10 @@ public final class Import implements Operation {
 
   /**
    * Create a new {@code Import.Builder} instance.
-   * <p>
-   * The specified location string must be the relative path string from classpath root.
-   * </p>
    *
-   * @param location the location of the source file that is the relative path from classpath root
+   * @param location the {@code /}-separated path from classpath root to the Excel file
    * @return the new {@code Import.Builder} instance
-   * @throws IllegalArgumentException if the source file was not found
+   * @throws IllegalArgumentException if the Excel file is not found
    */
   public static Builder excel(@NotNull String location) {
     var urlLocation = Import.class.getClassLoader()
@@ -136,25 +56,59 @@ public final class Import implements Operation {
     this.internalOperation = OperationBuilder.build(builder);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(Connection connection, BinderConfiguration configuration) throws SQLException {
     internalOperation.execute(connection, configuration);
   }
 
   /**
-   * A builder to create the {@code Import} instance.
-   *
-   * <h2>Usage</h2>
-   * <p>The default settings are:</p>
-   * <ul>
-   *   <li>{@code include([])}</li>
-   *   <li>{@code exclude([])}</li>
-   *   <li>{@code resolver(i -> i)}</li>
-   *   <li>{@code left(0)}</li>
-   *   <li>{@code top(0)}</li>
-   *   <li>{@code margin(0, 0)}</li>
-   *   <li>{@code skipAfterHeader(0)}</li>
-   * </ul>
+   * A builder to create the {@code Import} operation.
+   * The builder instance is created by the static method {@link Import#excel(String)}.
+   * <table class="striped">
+   *   <caption>Settings</caption>
+   *   <thead>
+   *     <tr>
+   *       <th>Property</th>
+   *       <th>Default Value</th>
+   *       <th>To Customize</th>
+   *     </tr>
+   *   </thead>
+   *   <tbody>
+   *     <tr>
+   *       <th>Sheets to include</th>
+   *       <td>all sheets</td>
+   *       <td>{@link #include(String...)} or {@link #include(Pattern...)}</td>
+   *     </tr>
+   *     <tr>
+   *       <th>Sheets to exclude</th>
+   *       <td>none</td>
+   *       <td>{@link #exclude(String...)} or {@link #exclude(Pattern...)}</td>
+   *     </tr>
+   *     <tr>
+   *       <th>Table name resolver</th>
+   *       <td>Worksheet name is used as table name</td>
+   *       <td>{@link #resolver(Map)} or {@link #resolver(Function)}</td>
+   *     </tr>
+   *     <tr>
+   *       <th>Left margin</th>
+   *       <td>{@code 0} columns</td>
+   *       <td>{@link #left(int)} or {@link #margin(int, int)}</td>
+   *     </tr>
+   *     <tr>
+   *       <th>Top margin</th>
+   *       <td>{@code 0} rows</td>
+   *       <td>{@link #top(int)} or {@link #margin(int, int)}</td>
+   *     </tr>
+   *     <tr>
+   *       <th>Skip rows after header</th>
+   *       <td>{@code 0} rows</td>
+   *       <td>{@link #skipAfterHeader(int)}</td>
+   *     </tr>
+   *   </tbody>
+   * </table>
    *
    * @author sciencesakura
    */
@@ -176,10 +130,10 @@ public final class Import implements Operation {
     }
 
     /**
-     * Build a new {@code Import} instance.
+     * Build a new {@code Import} operation instance.
      *
      * @return the new {@code Import} instance
-     * @throws IllegalStateException if this method was called more than once on the same instance
+     * @throws IllegalStateException if this builder has already built operation
      */
     public Import build() {
       if (built) {
@@ -190,9 +144,11 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the patterns of the worksheet name to be included from the importing.
+     * Specifies a list of patterns to include.
+     * The patterns are used to match the worksheet names in the Excel file.
+     * By default, all worksheets are included.
      *
-     * @param patterns the regular expression patterns of the worksheet name to be included
+     * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
     public Builder include(@NotNull String... patterns) {
@@ -206,9 +162,11 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the patterns of the worksheet name to be included from the importing.
+     * Specifies a list of patterns to include.
+     * The patterns are used to match the worksheet names in the Excel file.
+     * By default, all worksheets are included.
      *
-     * @param patterns the regular expression patterns of the worksheet name to be included
+     * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
     public Builder include(@NotNull Pattern... patterns) {
@@ -222,9 +180,11 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the patterns of the worksheet name to be excluded from the importing.
+     * Specifies a list of patterns to exclude.
+     * The patterns are used to match the worksheet names in the Excel file.
+     * By default, no worksheets are excluded.
      *
-     * @param patterns the regular expression patterns of the worksheet name to be excluded
+     * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
     public Builder exclude(@NotNull String... patterns) {
@@ -238,9 +198,11 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the patterns of the worksheet name to be excluded from the importing.
+     * Specifies a list of patterns to exclude.
+     * The patterns are used to match the worksheet names in the Excel file.
+     * By default, no worksheets are excluded.
      *
-     * @param patterns the regular expression patterns of the worksheet name to be excluded
+     * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
     public Builder exclude(@NotNull Pattern... patterns) {
@@ -254,9 +216,10 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the resolver to map the worksheet name to the table name.
+     * Specifies a resolver to map worksheet names to table names.
+     * By default, the worksheet name is used as the table name.
      *
-     * @param resolver the resolver to map the worksheet name to the table name
+     * @param resolver a map from worksheet name to table name
      * @return the reference to this object
      */
     public Builder resolver(@NotNull Map<String, String> resolver) {
@@ -265,9 +228,10 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the resolver to map the worksheet name to the table name.
+     * Specifies a resolver to map worksheet names to table names.
+     * By default, the worksheet name is used as the table name.
      *
-     * @param resolver the resolver to map the worksheet name to the table name
+     * @param resolver a map from worksheet name to table name
      * @return the reference to this object
      */
     public Builder resolver(@NotNull Function<String, String> resolver) {
@@ -276,14 +240,12 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the start column index of the worksheet to read data.
-     * <p>
-     * By default {@code 0} is used.
-     * </p>
+     * Sets the left margin in columns.
+     * By default, the left margin is {@code 0} columns.
      *
-     * @param left the 0-based column index, must be non-negative
+     * @param left the left margin in columns, must be non-negative
      * @return the reference to this object
-     * @throws IllegalArgumentException if the specified value is negative
+     * @throws IllegalArgumentException if the argument is less than {@code 0}
      */
     public Builder left(int left) {
       if (left < 0) {
@@ -294,14 +256,12 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the start row index of the worksheet to read data.
-     * <p>
-     * By default {@code 0} is used.
-     * </p>
+     * Sets the top margin in rows.
+     * By default, the top margin is {@code 0} rows.
      *
-     * @param top the 0-based row index, must be non-negative
+     * @param top the top margin in rows, must be non-negative
      * @return the reference to this object
-     * @throws IllegalArgumentException if the specified value is negative
+     * @throws IllegalArgumentException if the argument is less than {@code 0}
      */
     public Builder top(int top) {
       if (top < 0) {
@@ -312,29 +272,25 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the start column index and row index of the worksheet to read data.
-     * <p>
-     * By default {@code (0, 0)} is used.
-     * </p>
+     * Sets the left and top margins.
+     * By default, the left margin is {@code 0} columns and the top margin is {@code 0} rows.
      *
-     * @param left the 0-based column index, must be non-negative
-     * @param top  the 0-based row index, must be non-negative
+     * @param left the left margin in columns, must be non-negative
+     * @param top  the top margin in rows, must be non-negative
      * @return the reference to this object
-     * @throws IllegalArgumentException if the specified value is negative
+     * @throws IllegalArgumentException if the arguments contain less than {@code 0}
      */
     public Builder margin(int left, int top) {
       return left(left).top(top);
     }
 
     /**
-     * Specifies the number of rows to skip after the header row.
-     * <p>
-     * By default {@code 0} is used.
-     * </p>
+     * Sets the number of rows to skip after the header row.
+     * By default, no rows are skipped after the header row.
      *
      * @param n the number of rows to skip after the header row, must be non-negative
      * @return the reference to this object
-     * @throws IllegalArgumentException if the specified value is negative
+     * @throws IllegalArgumentException if the argument is less than {@code 0}
      */
     public Builder skipAfterHeader(int n) {
       if (n < 0) {
@@ -345,15 +301,14 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the default value for the given pair of table and column.
+     * Specifies a default value for the given table and column.
      *
      * @param table  the table name
-     * @param column the column name
-     * @param value  the default value
+     * @param column the column name to set the default value
+     * @param value  the default value (nullable)
      * @return the reference to this object
      */
-    public Builder withDefaultValue(@NotNull String table, @NotNull String column,
-                                    Object value) {
+    public Builder withDefaultValue(@NotNull String table, @NotNull String column, Object value) {
       requireNonNull(table, "table must not be null");
       requireNonNull(column, "column must not be null");
       defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
@@ -361,11 +316,12 @@ public final class Import implements Operation {
     }
 
     /**
-     * Specifies the value generator for the given pair of table and column.
+     * Specifies a value generator for the given table and column.
+     * The value generator is used to generate a value for the column when inserting rows.
      *
      * @param table          the table name
-     * @param column         the column name
-     * @param valueGenerator the generator
+     * @param column         the column name to set the value generator
+     * @param valueGenerator the value generator to use
      * @return the reference to this object
      */
     public Builder withGeneratedValue(@NotNull String table, @NotNull String column,

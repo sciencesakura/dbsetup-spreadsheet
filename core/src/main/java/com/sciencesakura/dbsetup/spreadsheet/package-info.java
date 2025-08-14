@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 /**
- * A package containing classes to import data from Microsoft Excel files.
+ * This package contains classes for importing Microsoft Excel files into a database.
  */
 package com.sciencesakura.dbsetup.spreadsheet;
