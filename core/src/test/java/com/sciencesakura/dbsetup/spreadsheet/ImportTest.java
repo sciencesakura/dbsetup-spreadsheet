@@ -24,22 +24,23 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.assertj.db.type.AssertDbConnection;
 import org.assertj.db.type.AssertDbConnectionFactory;
+import org.assertj.db.type.Changes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class ImportTest {
 
-  static final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-
-  static final String username = "sa";
-
   AssertDbConnection connection;
 
   Destination destination;
 
+  Changes changes;
+
   @BeforeEach
   void setUp() {
+    var url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+    var username = "sa";
     connection = AssertDbConnectionFactory.of(url, username, null).create();
     destination = new DriverManagerDestination(url, username, null);
   }
@@ -65,11 +66,12 @@ class ImportTest {
           + "primary key (id)"
           + ")");
       new DbSetup(destination, sequenceOf(ddl, truncate("data_types"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void import_with_default_settings() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("DataTypes/data_types.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -120,7 +122,6 @@ class ImportTest {
   }
 
   @Nested
-  @SuppressWarnings("ConstantConditions")
   class ExcelFile {
 
     @Test
@@ -139,28 +140,30 @@ class ImportTest {
 
     @Test
     void throw_dsre_if_header_row_contains_blank() {
-      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("blank_in_header").build())
+      var builder = excel("ExcelFile/invalid_sheets.xlsx").include("blank_in_header");
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("header cell must not be blank: blank_in_header!B1");
     }
 
     @Test
     void throw_dsre_if_header_row_contains_non_string_value() {
-      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("non_string_in_header").build())
+      var builder = excel("ExcelFile/invalid_sheets.xlsx").include("non_string_in_header");
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("header cell must be string type: non_string_in_header!B1");
     }
 
     @Test
     void throw_dsre_if_header_row_contains_error() {
-      assertThatThrownBy(() -> excel("ExcelFile/invalid_sheets.xlsx").include("error_in_header").build())
+      var builder = excel("ExcelFile/invalid_sheets.xlsx").include("error_in_header");
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("error value contained: error_in_header!B1");
     }
   }
 
   @Nested
-  @SuppressWarnings("ConstantConditions")
   class TableNames {
 
     @BeforeEach
@@ -183,11 +186,12 @@ class ImportTest {
           + ")";
       new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_21, table_22),
           truncate("table_11", "table_12", "table_21", "table_22"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void import_all_sheets() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -212,7 +216,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_string_pattern() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(".+2$").build();
       new DbSetup(destination, operation).launch();
@@ -230,7 +234,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_string_patterns() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(".+2$", ".+11$").build();
       new DbSetup(destination, operation).launch();
@@ -252,7 +256,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_pattern() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(Pattern.compile(".+2$")).build();
       new DbSetup(destination, operation).launch();
@@ -270,7 +274,7 @@ class ImportTest {
 
     @Test
     void import_only_sheets_whose_name_matches_patterns() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .include(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
       new DbSetup(destination, operation).launch();
@@ -292,7 +296,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_string_pattern() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(".+2$").build();
       new DbSetup(destination, operation).launch();
@@ -310,7 +314,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_string_patterns() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(".+2$", ".+11$").build();
       new DbSetup(destination, operation).launch();
@@ -324,7 +328,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_pattern() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(Pattern.compile(".+2$")).build();
       new DbSetup(destination, operation).launch();
@@ -342,7 +346,7 @@ class ImportTest {
 
     @Test
     void skip_sheets_with_name_that_matches_patterns() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("TableNames/table_names.xlsx")
           .exclude(Pattern.compile(".+2$"), Pattern.compile(".+11$")).build();
       new DbSetup(destination, operation).launch();
@@ -356,39 +360,39 @@ class ImportTest {
 
     @Test
     void throws_npe_if_string_pattern_to_include_is_null() {
-      String[] patterns = null;
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.include((String[]) null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("patterns must not be null");
     }
 
     @Test
     void throws_npe_if_string_pattern_to_include_contains_null() {
-      String[] patterns = new String[]{".+2$", null};
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.include(".+2$", null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("patterns must not contain null");
     }
 
     @Test
     void throws_npe_if_pattern_to_include_is_null() {
-      Pattern[] patterns = null;
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.include((Pattern[]) null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("patterns must not be null");
     }
 
     @Test
     void throws_npe_if_pattern_to_include_contains_null() {
-      Pattern[] patterns = new Pattern[]{Pattern.compile(".+2$"), null};
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").include(patterns))
+      var patterns = new Pattern[]{Pattern.compile(".+2$"), null};
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.include(patterns))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("patterns must not contain null");
     }
   }
 
   @Nested
-  @SuppressWarnings("ConstantConditions")
   class TableMapping {
 
     @BeforeEach
@@ -407,11 +411,12 @@ class ImportTest {
           + ")";
       new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
           truncate("table_11", "table_12", "table_13"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void sheet_name_maps_to_table_name() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var resolver = Map.of("a", "table_13", "b", "table_12", "c", "table_11");
       var operation = excel("TableMapping/table_mapping.xlsx")
           .resolver(resolver).build();
@@ -435,21 +440,24 @@ class ImportTest {
     @Test
     void throws_dsre_if_resolver_could_not_resolve_table() {
       var resolver = Map.of("a", "table_13", "b", "table_12");
-      assertThatThrownBy(() -> excel("TableMapping/table_mapping.xlsx").resolver(resolver).build())
+      var builder = excel("TableMapping/table_mapping.xlsx").resolver(resolver);
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("could not resolve table name: c");
     }
 
     @Test
     void throws_npe_if_resolver_is_null_1() {
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").resolver((Map<String, String>) null))
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.resolver((Map<String, String>) null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("resolver must not be null");
     }
 
     @Test
     void throws_npe_if_resolver_is_null_2() {
-      assertThatThrownBy(() -> excel("TableNames/table_names.xlsx").resolver((Function<String, String>) null))
+      var builder = excel("TableNames/table_names.xlsx");
+      assertThatThrownBy(() -> builder.resolver((Function<String, String>) null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("resolver must not be null");
     }
@@ -470,11 +478,12 @@ class ImportTest {
           + ")";
       new DbSetup(destination, sequenceOf(sql(table_11, table_12),
           truncate("table_11", "table_12"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void default_margin_is_zero() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -491,7 +500,7 @@ class ImportTest {
 
     @Test
     void left_is_zero() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").left(0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -508,7 +517,7 @@ class ImportTest {
 
     @Test
     void left_is_five() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/left_margin.xlsx").left(5).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -525,7 +534,7 @@ class ImportTest {
 
     @Test
     void top_is_zero() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").top(0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -542,7 +551,7 @@ class ImportTest {
 
     @Test
     void top_is_five() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/top_margin.xlsx").top(5).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -559,7 +568,7 @@ class ImportTest {
 
     @Test
     void margin_is_zero() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/no_margin.xlsx").margin(0, 0).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -576,7 +585,7 @@ class ImportTest {
 
     @Test
     void left_is_two_and_top_is_three() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/left_top_margin.xlsx").margin(2, 3).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -593,7 +602,7 @@ class ImportTest {
 
     @Test
     void margin_between_header_and_data() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("Margin/margin_between_header_and_data.xlsx").skipAfterHeader(1).build();
       new DbSetup(destination, operation).launch();
       assertThat(changes.setEndPointNow())
@@ -610,42 +619,46 @@ class ImportTest {
 
     @Test
     void throw_dsre_if_header_row_is_not_found_1() {
-      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(8).build())
+      var builder = excel("Margin/no_margin.xlsx").top(8);
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("header row not found: table_11[8]");
     }
 
     @Test
     void throw_dsre_if_header_row_is_not_found_2() {
-      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").left(8).build())
+      var builder = excel("Margin/no_margin.xlsx").left(8);
+      assertThatThrownBy(builder::build)
           .isInstanceOf(DbSetupRuntimeException.class)
           .hasMessage("header row not found: table_11[0]");
     }
 
     @Test
     void throws_iae_if_left_is_negative() {
-      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").left(-1))
+      var builder = excel("Margin/no_margin.xlsx");
+      assertThatThrownBy(() -> builder.left(-1))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("left must be greater than or equal to 0");
     }
 
     @Test
     void throws_iae_if_top_is_negative() {
-      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").top(-1))
+      var builder = excel("Margin/no_margin.xlsx");
+      assertThatThrownBy(() -> builder.top(-1))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("top must be greater than or equal to 0");
     }
 
     @Test
     void throws_iae_if_margin_between_header_and_data_is_negative() {
-      assertThatThrownBy(() -> excel("Margin/no_margin.xlsx").skipAfterHeader(-1))
+      var builder = excel("Margin/no_margin.xlsx");
+      assertThatThrownBy(() -> builder.skipAfterHeader(-1))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessage("skipAfterHeader must be greater than or equal to 0");
     }
   }
 
   @Nested
-  @SuppressWarnings("ConstantConditions")
   class WithDefaultValue {
 
     @BeforeEach
@@ -664,11 +677,12 @@ class ImportTest {
           + ")";
       new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
           truncate("table_11", "table_12", "table_13"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void specify_default_value() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("WithDefaultValue/with_default_value.xlsx")
           .withDefaultValue("table_11", "name", "DEFAULT_1")
           .withDefaultValue("table_13", "name", "DEFAULT_2").build();
@@ -699,23 +713,22 @@ class ImportTest {
 
     @Test
     void throws_npe_if_table_is_null() {
-      assertThatThrownBy(() -> excel("WithDefaultValue/with_default_value.xlsx")
-          .withDefaultValue(null, "name", "DEFAULT_1"))
+      var builder = excel("WithDefaultValue/with_default_value.xlsx");
+      assertThatThrownBy(() -> builder.withDefaultValue(null, "name", "DEFAULT_1"))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("table must not be null");
     }
 
     @Test
     void throws_npe_if_column_is_null() {
-      assertThatThrownBy(() -> excel("WithDefaultValue/with_default_value.xlsx")
-          .withDefaultValue("table_11", null, "DEFAULT_1"))
+      var builder = excel("WithDefaultValue/with_default_value.xlsx");
+      assertThatThrownBy(() -> builder.withDefaultValue("table_11", null, "DEFAULT_1"))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("column must not be null");
     }
   }
 
   @Nested
-  @SuppressWarnings("ConstantConditions")
   class WithGeneratedValue {
 
     @BeforeEach
@@ -734,11 +747,12 @@ class ImportTest {
           + ")";
       new DbSetup(destination, sequenceOf(sql(table_11, table_12, table_13),
           truncate("table_11", "table_12", "table_13"))).launch();
+      changes = connection.changes().build();
     }
 
     @Test
     void specify_value_generator() {
-      var changes = connection.changes().build().setStartPointNow();
+      changes.setStartPointNow();
       var operation = excel("WithGeneratedValue/with_generated_value.xlsx")
           .withGeneratedValue("table_11", "id", ValueGenerators.sequence().startingAt(100))
           .withGeneratedValue("table_13", "id", ValueGenerators.sequence().startingAt(300))
@@ -770,24 +784,26 @@ class ImportTest {
 
     @Test
     void throws_npe_if_table_is_null() {
-      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
-          .withGeneratedValue(null, "name", ValueGenerators.sequence()))
+      var generator = ValueGenerators.sequence();
+      var builder = excel("WithGeneratedValue/with_generated_value.xlsx");
+      assertThatThrownBy(() -> builder.withGeneratedValue(null, "name", generator))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("table must not be null");
     }
 
     @Test
     void throws_npe_if_column_is_null() {
-      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
-          .withGeneratedValue("table_11", null, ValueGenerators.sequence()))
+      var generator = ValueGenerators.sequence();
+      var builder = excel("WithGeneratedValue/with_generated_value.xlsx");
+      assertThatThrownBy(() -> builder.withGeneratedValue("table_11", null, generator))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("column must not be null");
     }
 
     @Test
     void throws_npe_if_generator_is_null() {
-      assertThatThrownBy(() -> excel("WithGeneratedValue/with_generated_value.xlsx")
-          .withGeneratedValue("table_11", "name", null))
+      var builder = excel("WithGeneratedValue/with_generated_value.xlsx");
+      assertThatThrownBy(() -> builder.withGeneratedValue("table_11", "name", null))
           .isInstanceOf(NullPointerException.class)
           .hasMessage("valueGenerator must not be null");
     }

@@ -9,7 +9,6 @@ import com.ninja_squad.dbsetup.operation.Insert;
 import com.ninja_squad.dbsetup.operation.Operation;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
@@ -17,7 +16,6 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellReference;
 
@@ -27,33 +25,32 @@ final class OperationBuilder {
   }
 
   static Operation build(Import.Builder builder) {
-    try (Workbook workbook = WorkbookFactory.create(builder.location.openStream())) {
-      List<Operation> operations = new ArrayList<>(workbook.getNumberOfSheets());
-      FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-      for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+    try (var workbook = WorkbookFactory.create(builder.location.openStream())) {
+      var operations = new ArrayList<Operation>(workbook.getNumberOfSheets());
+      var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+      for (var i = 0; i < workbook.getNumberOfSheets(); i++) {
         if (workbook.isSheetHidden(i) || workbook.isSheetVeryHidden(i)) {
           continue;
         }
-        Sheet sheet = workbook.getSheetAt(i);
-        String sheetName = sheet.getSheetName();
+        var sheet = workbook.getSheetAt(i);
+        var sheetName = sheet.getSheetName();
         if (isExcluded(builder.include, builder.exclude, sheetName)) {
           continue;
         }
-        int rowIndex = builder.top;
-        Row row = sheet.getRow(rowIndex);
+        var rowIndex = builder.top;
+        var row = sheet.getRow(rowIndex);
         if (row == null) {
           throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
         }
-        int width = row.getLastCellNum() - builder.left;
+        var width = row.getLastCellNum() - builder.left;
         if (width <= 0) {
           throw new DbSetupRuntimeException("header row not found: " + sheetName + '[' + rowIndex + ']');
         }
-        String tableName = builder.resolver.apply(sheetName);
+        var tableName = builder.resolver.apply(sheetName);
         if (tableName == null) {
           throw new DbSetupRuntimeException("could not resolve table name: " + sheetName);
         }
-        Insert.Builder ib = Insert.into(tableName)
-            .columns(columns(row, builder.left, width, evaluator));
+        var ib = Insert.into(tableName).columns(columns(row, builder.left, width, evaluator));
         setDefaultValues(ib, builder.defaultValues, tableName);
         setValueGenerators(ib, builder.valueGenerators, tableName);
         rowIndex += builder.skipAfterHeader;
@@ -69,9 +66,9 @@ final class OperationBuilder {
   }
 
   private static boolean isExcluded(Pattern[] include, Pattern[] exclude, String sheetName) {
-    boolean included = include == null || include.length == 0;
+    var included = include == null || include.length == 0;
     if (!included) {
-      for (Pattern in : include) {
+      for (var in : include) {
         if (in.matcher(sheetName).matches()) {
           included = true;
           break;
@@ -84,7 +81,7 @@ final class OperationBuilder {
     if (exclude == null) {
       return false;
     }
-    for (Pattern ex : exclude) {
+    for (var ex : exclude) {
       if (ex.matcher(sheetName).matches()) {
         return true;
       }
@@ -95,7 +92,7 @@ final class OperationBuilder {
   private static void setDefaultValues(Insert.Builder ib,
                                        Map<String, Map<String, Object>> defaultValues,
                                        String tableName) {
-    Map<String, ?> dv = defaultValues.get(tableName);
+    var dv = defaultValues.get(tableName);
     if (dv == null) {
       return;
     }
@@ -105,7 +102,7 @@ final class OperationBuilder {
   private static void setValueGenerators(Insert.Builder ib,
                                          Map<String, Map<String, ValueGenerator<?>>> valueGenerators,
                                          String tableName) {
-    Map<String, ValueGenerator<?>> vg = valueGenerators.get(tableName);
+    var vg = valueGenerators.get(tableName);
     if (vg == null) {
       return;
     }
@@ -121,14 +118,14 @@ final class OperationBuilder {
   }
 
   private static String[] columns(Row row, int left, int width, FormulaEvaluator evaluator) {
-    String[] columns = new String[width];
-    for (int i = 0; i < width; i++) {
-      int c = left + i;
-      Cell cell = row.getCell(c);
+    var columns = new String[width];
+    for (var i = 0; i < width; i++) {
+      var c = left + i;
+      var cell = row.getCell(c);
       if (cell == null) {
         throw new DbSetupRuntimeException("header cell must not be blank: " + a1(row.getSheet(), row.getRowNum(), c));
       }
-      Object value = value(cell, evaluator);
+      var value = value(cell, evaluator);
       if (value == null || "".equals(value)) {
         throw new DbSetupRuntimeException("header cell must not be blank: " + a1(cell));
       } else if (!(value instanceof String)) {
@@ -159,9 +156,9 @@ final class OperationBuilder {
   }
 
   private static Object[] values(Row row, int left, int width, FormulaEvaluator evaluator) {
-    Object[] values = new Object[width];
-    for (int i = 0; i < width; i++) {
-      Cell cell = row.getCell(left + i);
+    var values = new Object[width];
+    for (var i = 0; i < width; i++) {
+      var cell = row.getCell(left + i);
       values[i] = cell == null ? null : value(cell, evaluator);
     }
     return values;

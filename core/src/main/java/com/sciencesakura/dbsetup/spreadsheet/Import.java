@@ -154,8 +154,8 @@ public final class Import implements Operation {
     public Builder include(@NotNull String... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.include = new Pattern[patterns.length];
-      int i = 0;
-      for (String pattern : patterns) {
+      var i = 0;
+      for (var pattern : patterns) {
         this.include[i++] = Pattern.compile(requireNonNull(pattern, "patterns must not contain null"));
       }
       return this;
@@ -172,8 +172,8 @@ public final class Import implements Operation {
     public Builder include(@NotNull Pattern... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.include = new Pattern[patterns.length];
-      int i = 0;
-      for (Pattern pattern : patterns) {
+      var i = 0;
+      for (var pattern : patterns) {
         this.include[i++] = requireNonNull(pattern, "patterns must not contain null");
       }
       return this;
@@ -190,8 +190,8 @@ public final class Import implements Operation {
     public Builder exclude(@NotNull String... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.exclude = new Pattern[patterns.length];
-      int i = 0;
-      for (String pattern : patterns) {
+      var i = 0;
+      for (var pattern : patterns) {
         this.exclude[i++] = Pattern.compile(requireNonNull(pattern, "patterns must not contain null"));
       }
       return this;
@@ -208,8 +208,8 @@ public final class Import implements Operation {
     public Builder exclude(@NotNull Pattern... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.exclude = new Pattern[patterns.length];
-      int i = 0;
-      for (Pattern pattern : patterns) {
+      var i = 0;
+      for (var pattern : patterns) {
         this.exclude[i++] = requireNonNull(pattern, "patterns must not contain null");
       }
       return this;

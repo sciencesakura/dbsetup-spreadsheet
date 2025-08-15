@@ -2,24 +2,26 @@
 
 package com.sciencesakura.dbsetup.spreadsheet
 
+import com.ninja_squad.dbsetup.destination.Destination
 import com.ninja_squad.dbsetup.destination.DriverManagerDestination
 import com.ninja_squad.dbsetup_kotlin.dbSetup
 import org.assertj.db.api.Assertions.assertThat
 import org.assertj.db.type.AssertDbConnectionFactory
+import org.assertj.db.type.Changes
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class ExcelTest {
-  val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+  lateinit var destination: Destination
 
-  val username = "sa"
-
-  val connection = AssertDbConnectionFactory.of(url, username, null).create()
-
-  val destination = DriverManagerDestination.with(url, username, null)
+  lateinit var changes: Changes
 
   @BeforeTest
   fun setUp() {
+    val url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+    val username = "sa"
+    val connection = AssertDbConnectionFactory.of(url, username, null).create()
+    destination = DriverManagerDestination.with(url, username, null)
     val table11 =
       """
       create table if not exists table_11 (
@@ -38,11 +40,12 @@ class ExcelTest {
       sql(table11, table12)
       truncate("table_11", "table_12")
     }.launch()
+    changes = connection.changes().build()
   }
 
   @Test
   fun import_excel() {
-    val changes = connection.changes().build().setStartPointNow()
+    changes.setStartPointNow()
     dbSetup(destination) {
       excel("kt_test.xlsx")
     }.launch()
@@ -61,7 +64,7 @@ class ExcelTest {
 
   @Test
   fun import_excel_with_configure() {
-    val changes = connection.changes().build().setStartPointNow()
+    changes.setStartPointNow()
     dbSetup(destination) {
       excel("kt_test.xlsx") {
         exclude("table_12")
