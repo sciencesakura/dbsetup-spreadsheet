@@ -15,13 +15,13 @@ The dbsetup-spreadsheet library is available on Maven Central. You can install i
 ### Gradle
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet:2.0.1'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet:2.0.2'
 ```
 
 If you are using Kotlin, you can use the Kotlin module for a more concise DSL:
 
 ```groovy
-testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.1'
+testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.2'
 ```
 
 ### Maven
@@ -30,7 +30,7 @@ testImplementation 'com.sciencesakura:dbsetup-spreadsheet-kt:2.0.1'
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.2</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -41,7 +41,7 @@ If you are using Kotlin, you can use the Kotlin module for a more concise DSL:
 <dependency>
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-kt</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.2</version>
   <scope>test</scope>
 </dependency>
 ```
