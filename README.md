@@ -1,6 +1,6 @@
 # dbsetup-spreadsheet: Import Excel into database with DbSetup
 
-![](https://github.com/sciencesakura/dbsetup-spreadsheet/actions/workflows/build.yaml/badge.svg) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.sciencesakura/dbsetup-spreadsheet)
+![](https://github.com/sciencesakura/dbsetup-spreadsheet/actions/workflows/build.yaml/badge.svg) [![Maven Central](https://maven-badges.sml.io/sonatype-central/com.sciencesakura/dbsetup-spreadsheet/badge.svg)](https://maven-badges.sml.io/sonatype-central/com.sciencesakura/dbsetup-spreadsheet)
 
 A [DbSetup](http://dbsetup.ninja-squad.com/) extension for importing Excel files into the database.
 
