@@ -6,7 +6,7 @@
 
   <groupId>com.sciencesakura</groupId>
   <artifactId>dbsetup-spreadsheet-parent</artifactId>
-  <version>2.0.2</version>
+  <version>2.0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>dbsetup-spreadsheet-parent</name>
@@ -41,14 +41,14 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>11</java.version>
-    <kotlin.version>2.2.0</kotlin.version>
-    <maven.compiler.release>${java.version}</maven.compiler.release>
+    <tool.java.version>17</tool.java.version>
+    <kotlin.version>2.3.10</kotlin.version>
+    <maven.compiler.release>11</maven.compiler.release>
 
     <!-- plugin versions -->
-    <maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
+    <maven-bundle-plugin.version>6.0.0</maven-bundle-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
+    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
@@ -61,14 +61,28 @@
 
     <!-- dependency versions -->
     <assertj-db.version>3.0.0</assertj-db.version>
-    <checkstyle.version>10.26.1</checkstyle.version>
+    <checkstyle.version>12.3.1</checkstyle.version>
     <dbsetup.version>2.1.0</dbsetup.version>
     <h2.version>2.3.232</h2.version>
     <jetbrains-annotations.version>13.0</jetbrains-annotations.version>
-    <junit-jupiter.version>5.10.1</junit-jupiter.version>
+    <junit-jupiter.version>6.0.3</junit-jupiter.version>
     <log4j2.version>2.24.3</log4j2.version>
     <poi.version>5.4.1</poi.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <name>Central Portal Snapshots</name>
+      <id>central-portal-snapshots</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -269,7 +283,7 @@
           <artifactId>dokka-maven-plugin</artifactId>
           <version>${dokka-maven-plugin.version}</version>
           <configuration>
-            <jdkVersion>${java.version}</jdkVersion>
+            <jdkVersion>${tool.java.version}</jdkVersion>
           </configuration>
           <executions>
             <execution>
@@ -286,13 +300,35 @@
           <version>${kotlin.version}</version>
           <extensions>true</extensions>
           <configuration>
-            <jvmTarget>${java.version}</jvmTarget>
+            <jvmTarget>${maven.compiler.release}</jvmTarget>
           </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
+        <configuration>
+          <rules>
+            <requireJavaVersion>
+              <version>${tool.java.version}</version>
+            </requireJavaVersion>
+            <requireMavenVersion>
+              <version>[3.6.3,)</version>
+            </requireMavenVersion>
+          </rules>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
