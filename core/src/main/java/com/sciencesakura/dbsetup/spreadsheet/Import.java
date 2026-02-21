@@ -15,7 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * An Operation which imports the Microsoft Excel file into the database.
@@ -41,7 +41,8 @@ public final class Import implements Operation {
    * @return the new {@code Import.Builder} instance
    * @throws IllegalArgumentException if the Excel file is not found
    */
-  public static Builder excel(@NotNull String location) {
+  @NonNull
+  public static Builder excel(@NonNull String location) {
     var urlLocation = Import.class.getClassLoader()
         .getResource(requireNonNull(location, "location must not be null"));
     if (urlLocation == null) {
@@ -135,6 +136,7 @@ public final class Import implements Operation {
      * @return the new {@code Import} instance
      * @throws IllegalStateException if this builder has already built operation
      */
+    @NonNull
     public Import build() {
       if (built) {
         throw new IllegalStateException("already built");
@@ -151,7 +153,7 @@ public final class Import implements Operation {
      * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
-    public Builder include(@NotNull String... patterns) {
+    public Builder include(@NonNull String... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.include = new Pattern[patterns.length];
       var i = 0;
@@ -169,7 +171,7 @@ public final class Import implements Operation {
      * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
-    public Builder include(@NotNull Pattern... patterns) {
+    public Builder include(@NonNull Pattern... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.include = new Pattern[patterns.length];
       var i = 0;
@@ -187,7 +189,7 @@ public final class Import implements Operation {
      * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
-    public Builder exclude(@NotNull String... patterns) {
+    public Builder exclude(@NonNull String... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.exclude = new Pattern[patterns.length];
       var i = 0;
@@ -205,7 +207,7 @@ public final class Import implements Operation {
      * @param patterns the regular expressions to match worksheet names
      * @return the reference to this object
      */
-    public Builder exclude(@NotNull Pattern... patterns) {
+    public Builder exclude(@NonNull Pattern... patterns) {
       requireNonNull(patterns, "patterns must not be null");
       this.exclude = new Pattern[patterns.length];
       var i = 0;
@@ -222,7 +224,7 @@ public final class Import implements Operation {
      * @param resolver a map from worksheet name to table name
      * @return the reference to this object
      */
-    public Builder resolver(@NotNull Map<String, String> resolver) {
+    public Builder resolver(@NonNull Map<String, String> resolver) {
       requireNonNull(resolver, "resolver must not be null");
       return resolver(resolver::get);
     }
@@ -234,7 +236,7 @@ public final class Import implements Operation {
      * @param resolver a map from worksheet name to table name
      * @return the reference to this object
      */
-    public Builder resolver(@NotNull Function<String, String> resolver) {
+    public Builder resolver(@NonNull Function<String, String> resolver) {
       this.resolver = requireNonNull(resolver, "resolver must not be null");
       return this;
     }
@@ -308,7 +310,7 @@ public final class Import implements Operation {
      * @param value  the default value (nullable)
      * @return the reference to this object
      */
-    public Builder withDefaultValue(@NotNull String table, @NotNull String column, Object value) {
+    public Builder withDefaultValue(@NonNull String table, @NonNull String column, Object value) {
       requireNonNull(table, "table must not be null");
       requireNonNull(column, "column must not be null");
       defaultValues.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(column, value);
@@ -324,8 +326,8 @@ public final class Import implements Operation {
      * @param valueGenerator the value generator to use
      * @return the reference to this object
      */
-    public Builder withGeneratedValue(@NotNull String table, @NotNull String column,
-                                      @NotNull ValueGenerator<?> valueGenerator) {
+    public Builder withGeneratedValue(@NonNull String table, @NonNull String column,
+                                      @NonNull ValueGenerator<?> valueGenerator) {
       requireNonNull(table, "table must not be null");
       requireNonNull(column, "column must not be null");
       requireNonNull(valueGenerator, "valueGenerator must not be null");
