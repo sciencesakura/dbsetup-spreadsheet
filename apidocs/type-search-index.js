@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"com.sciencesakura.dbsetup.spreadsheet","l":"Import.Builder"},{"p":"com.sciencesakura.dbsetup.spreadsheet","l":"Import"}]
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"com.sciencesakura.dbsetup.spreadsheet","l":"Import.Builder"},{"p":"com.sciencesakura.dbsetup.spreadsheet","l":"Import"}];updateSearchResults();

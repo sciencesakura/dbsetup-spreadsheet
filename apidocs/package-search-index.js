@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"com.sciencesakura.dbsetup.spreadsheet"}]
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.sciencesakura.dbsetup.spreadsheet"}];updateSearchResults();
