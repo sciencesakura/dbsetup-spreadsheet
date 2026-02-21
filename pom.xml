@@ -58,6 +58,7 @@
     <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
     <ktlint-maven-plugin.version>3.5.0</ktlint-maven-plugin.version>
     <spotbugs-maven-plugin.version>4.9.3.2</spotbugs-maven-plugin.version>
+    <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
 
     <!-- dependency versions -->
     <assertj-db.version>3.0.0</assertj-db.version>
@@ -340,6 +341,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>${versions-maven-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.sonatype.central</groupId>
