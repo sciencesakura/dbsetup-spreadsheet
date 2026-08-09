@@ -1,0 +1,40 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+## [2.0.3] - 2026-02-22
+### Changed
+- Upgrade tool Java version to 17 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/54).
+- Upgrade dependencies (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/55).
+- Switch to JSpecify for nullability expression (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/56).
+
+## [2.0.2] - 2025-08-15
+### Changed
+- Upgrade toolchains and improve dev environment (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/50).
+- Various corrections (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/51).
+
+## [2.0.1] - 2024-03-23
+### Added
+- Allow ignorable rows between the header row and the data rows (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/47).
+### Changed
+- Upgrade POI 5.2.3->5.2.5 and others (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/45).
+- Upgrade actions: checkout and setup-java (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/46).
+
+## [2.0.0] - 2023-07-30
+### Changed
+- Build with maven (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/38).
+- Make it possible to publish API docs with CI (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/39).
+- Publish packages to registry in CI (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/40).
+- Improve test (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/41).
+- Refactor (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/42).
+- Change and improve tableMapper method (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/43).
+
+## [1.0.3] - 2022-06-01
+### Changed
+- Improve 'Installation' section of README.md (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/33).
+- Upgrade POI 5.1.0->5.2.2 and others (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/34).
+- Improve sheet exclusion (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/35).
