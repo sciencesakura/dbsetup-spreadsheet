@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build: Follow the maven-bundle-plugin's default behavior for Import-Package (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/70).
 - Bump org.apache.maven.plugins:maven-enforcer-plugin from 3.6.2 to 3.6.3 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/67).
 - Bump org.apache.felix:maven-bundle-plugin from 6.0.0 to 6.1.0 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/68).
+- feat: Use package-level nullability annotation (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/71).
 
 ## [2.0.3] - 2026-02-22
 ### Changed
