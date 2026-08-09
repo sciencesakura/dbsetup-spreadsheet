@@ -257,7 +257,6 @@
           <configuration>
             <instructions>
               <Bundle-DocURL>${project.url}</Bundle-DocURL>
-              <Import-Package>!java.*,!kotlin.*,*</Import-Package>
             </instructions>
           </configuration>
           <executions>
