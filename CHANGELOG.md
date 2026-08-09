@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - ci: Set paths to reduce unnecessary CI runs (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/59).
 - build: Upgrade the Java used for building from 17 to 21 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/60).
+- build: Add Dependabot (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/61).
+- ci: Deploy docs automatically (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/63).
+- Bump org.junit.jupiter:junit-jupiter from 6.0.3 to 6.1.2 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/62).
+- Bump org.apache.logging.log4j:log4j-core from 2.25.3 to 2.25.4 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/58).
 
 ## [2.0.3] - 2026-02-22
 ### Changed
