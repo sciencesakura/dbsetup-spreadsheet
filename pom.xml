@@ -41,7 +41,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <tool.java.version>17</tool.java.version>
+    <java.version>21</java.version>
     <kotlin.version>2.3.10</kotlin.version>
     <maven.compiler.release>11</maven.compiler.release>
 
@@ -285,7 +285,7 @@
           <artifactId>dokka-maven-plugin</artifactId>
           <version>${dokka-maven-plugin.version}</version>
           <configuration>
-            <jdkVersion>${tool.java.version}</jdkVersion>
+            <jdkVersion>${java.version}</jdkVersion>
           </configuration>
           <executions>
             <execution>
@@ -316,7 +316,7 @@
         <configuration>
           <rules>
             <requireJavaVersion>
-              <version>${tool.java.version}</version>
+              <version>${java.version}</version>
             </requireJavaVersion>
             <requireMavenVersion>
               <version>[3.6.3,)</version>
