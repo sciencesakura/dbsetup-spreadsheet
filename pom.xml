@@ -61,7 +61,7 @@
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
 
     <!-- dependency versions -->
-    <assertj-db.version>3.0.1</assertj-db.version>
+    <assertj-db.version>3.0.2</assertj-db.version>
     <checkstyle.version>12.3.1</checkstyle.version>
     <dbsetup.version>2.1.0</dbsetup.version>
     <h2.version>2.4.240</h2.version>
