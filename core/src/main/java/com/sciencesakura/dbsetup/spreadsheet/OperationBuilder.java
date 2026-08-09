@@ -18,6 +18,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellReference;
+import org.jspecify.annotations.Nullable;
 
 final class OperationBuilder {
 
@@ -65,7 +66,7 @@ final class OperationBuilder {
     }
   }
 
-  private static boolean isExcluded(Pattern[] include, Pattern[] exclude, String sheetName) {
+  private static boolean isExcluded(Pattern @Nullable [] include, Pattern @Nullable [] exclude, String sheetName) {
     var included = include == null || include.length == 0;
     if (!included) {
       for (var in : include) {
@@ -136,6 +137,7 @@ final class OperationBuilder {
     return columns;
   }
 
+  @Nullable
   private static Object value(Cell cell, FormulaEvaluator evaluator) {
     switch (cell.getCellType()) {
       case NUMERIC:
