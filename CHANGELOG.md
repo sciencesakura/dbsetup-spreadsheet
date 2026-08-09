@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci: Deploy docs automatically (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/63).
 - Bump org.junit.jupiter:junit-jupiter from 6.0.3 to 6.1.2 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/62).
 - Bump org.apache.logging.log4j:log4j-core from 2.25.3 to 2.25.4 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/58).
+- Bump kotlin.version from 2.3.10 to 2.4.10 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/64).
+- build: Remove the redundant option kotlin.compiler.jvmTarget (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/69).
+- Bump org.jspecify:jspecify from 1.0.0 to 1.0.1 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/65).
+- Bump org.assertj:assertj-db from 3.0.1 to 3.0.2 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/66).
+- build: Follow the maven-bundle-plugin's default behavior for Import-Package (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/70).
+- Bump org.apache.maven.plugins:maven-enforcer-plugin from 3.6.2 to 3.6.3 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/67).
+- Bump org.apache.felix:maven-bundle-plugin from 6.0.0 to 6.1.0 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/68).
 
 ## [2.0.3] - 2026-02-22
 ### Changed
