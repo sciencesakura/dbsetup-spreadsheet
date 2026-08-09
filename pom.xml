@@ -301,9 +301,6 @@
           <artifactId>kotlin-maven-plugin</artifactId>
           <version>${kotlin.version}</version>
           <extensions>true</extensions>
-          <configuration>
-            <jvmTarget>${maven.compiler.release}</jvmTarget>
-          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
