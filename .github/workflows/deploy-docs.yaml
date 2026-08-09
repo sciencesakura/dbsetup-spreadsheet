@@ -1,7 +1,21 @@
-name: publish docs
-on: workflow_dispatch
+name: deploy docs
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/deploy-docs.yaml'
+      - '.java-version'
+      - '.mvn/**'
+      - 'core/**'
+      - '!core/src/test/**'
+      - 'docs/**'
+      - 'kotlin/**'
+      - '!kotlin/src/test/**'
+      - 'pom.xml'
+
 jobs:
-  publish-api-docs:
+  deploy-api-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
