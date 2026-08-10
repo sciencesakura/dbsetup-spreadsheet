@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump org.apache.maven.plugins:maven-enforcer-plugin from 3.6.2 to 3.6.3 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/67).
 - Bump org.apache.felix:maven-bundle-plugin from 6.0.0 to 6.1.0 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/68).
 - feat: Use package-level nullability annotation (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/71).
+- build: Exclude tests from SpotBugs linting (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/77).
+- Bump com.github.spotbugs:spotbugs-maven-plugin from 4.9.8.2 to 4.10.3.0 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/72).
+- Bump org.apache.logging.log4j:log4j-core from 2.25.4 to 2.26.1 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/73).
+- Bump org.jetbrains.dokka:dokka-maven-plugin from 2.1.0 to 2.2.0 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/74).
+- Bump com.github.gantsign.maven:ktlint-maven-plugin from 3.5.0 to 3.7.1 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/75).
+- Bump org.apache.maven.plugins:maven-jar-plugin from 3.5.0 to 3.5.1 (https://github.com/sciencesakura/dbsetup-spreadsheet/pull/76).
 
 ## [2.0.3] - 2026-02-22
 ### Changed
